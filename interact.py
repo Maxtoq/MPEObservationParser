@@ -1,4 +1,5 @@
 import argparse
+import keyboard
 import json
 import time
 import numpy as np
@@ -12,7 +13,20 @@ class KeyboardActor:
         pass
 
     def get_action(self):
-        return [0.0, 0.0]
+        if keyboard.is_pressed('z'):
+            print('z')
+            return np.array([[0.0, 0.5]])
+        elif keyboard.is_pressed('s'):
+            print('s')
+            return np.array([[0.0, -0.5]])
+        elif keyboard.is_pressed('q'):
+            print('q')
+            return np.array([[-0.5, 0.0]])
+        elif keyboard.is_pressed('d'):
+            print('d')
+            return np.array([[0.5, 0.0]])
+        else:
+            return np.array([[0.0, 0.0]])
 
 
 def run(args):
@@ -26,7 +40,7 @@ def run(args):
     env = make_env(
         args.env_path, 
         discrete_action=args.discrete_action, 
-        sce_conf=sce_conf)
+        sce_conf=sce_conf) 
 
     actor = KeyboardActor()
     

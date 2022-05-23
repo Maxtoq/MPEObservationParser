@@ -29,6 +29,15 @@ class KeyboardActor:
             return np.array([[0.0, 0.0]])
 
 
+class ObservationParser:
+
+    def __init__(self):
+        pass
+
+    def parse_obs(self, obs):
+        pass
+
+
 def run(args):
     # Load scenario config
     sce_conf = {}
@@ -43,8 +52,6 @@ def run(args):
         sce_conf=sce_conf) 
 
     actor = KeyboardActor()
-    while True:
-        actor.get_action()
     
     for ep_i in range(args.n_episodes):
         obs = env.reset()
@@ -68,8 +75,8 @@ if __name__ == "__main__":
     # Scenario
     parser.add_argument("--env_path", default="env/coop_push_scenario_sparse.py",
                         help="Path to the environment")
-    parser.add_argument("--sce_conf_path", default="configs/1a_1o_po_rel.json", type=str,
-                        help="Path to the scenario config file")
+    parser.add_argument("--sce_conf_path", default="configs/1a_1o_po_rel.json", 
+                        type=str, help="Path to the scenario config file")
     # Environment
     parser.add_argument("--n_episodes", default=1, type=int)
     parser.add_argument("--episode_length", default=100, type=int)

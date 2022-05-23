@@ -43,6 +43,8 @@ def run(args):
         sce_conf=sce_conf) 
 
     actor = KeyboardActor()
+    while True:
+        actor.get_action()
     
     for ep_i in range(args.n_episodes):
         obs = env.reset()

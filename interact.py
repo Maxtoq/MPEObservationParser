@@ -34,8 +34,8 @@ class KeyboardActor:
 class ObservationParser:
 
     
-    def __init__(self):
-        pass
+    def __init__(self, args):
+        self.args = args
 
     #Check the position of the agent to see if it is in a corner
     def check_position(self, obs):
@@ -54,7 +54,7 @@ class ObservationParser:
 
         #Generation of a NOT sentence ?
         not_sentence = False
-        if random.randint(1,args.chance_not_sent) == 1:
+        if random.random() <= self.args.chance_not_sent:
             not_sentence = True
 
         # Position of the agent (at all time)
@@ -99,7 +99,7 @@ class ObservationParser:
             place = place + object*5 
 
             # If not visible and not sentence
-            if not_sentence == True and obs[0][place] == 0:
+            if not_sentence and obs[0][place] == 0:
                 if self.check_position(obs) :
                     sentence = sentence + " Object Not " + position
 
@@ -145,7 +145,7 @@ class ObservationParser:
             place = place + landmark*3
 
             # If not visible and not sentence
-            if not_sentence == True and obs[0][place] == 0:
+            if not_sentence and obs[0][place] == 0:
                 if self.check_position(obs):
                     sentence = sentence + " Landmark Not " + position
 
@@ -199,11 +199,18 @@ def run(args):
         discrete_action=args.discrete_action, 
         sce_conf=sce_conf) 
 
+    # Load initial positions if given
+    if args.sce_init_pos is not None:
+        with open(args.sce_init_pos, 'r') as f:
+            init_pos_scenar = json.load(f)
+    else:
+        init_pos_scenar = None
+
     actor = KeyboardActor()
     observation = ObservationParser()
     
     for ep_i in range(args.n_episodes):
-        obs = env.reset()
+        obs = env.reset(init_pos=init_pos_scenar)
         for step_i in range(args.episode_length):
             print("Step", step_i)
             print("Observations:", obs)
@@ -229,6 +236,8 @@ if __name__ == "__main__":
                         help="Path to the environment")
     parser.add_argument("--sce_conf_path", default="configs/1a_1o_po_rel.json", 
                         type=str, help="Path to the scenario config file")
+    parser.add_argument("--sce_init_pos", default=None, 
+                        type=str, help="Path to initial positions config file")
     # Environment
     parser.add_argument("--n_episodes", default=1, type=int)
     parser.add_argument("--episode_length", default=100, type=int)
@@ -236,7 +245,7 @@ if __name__ == "__main__":
     # Render
     parser.add_argument("--step_time", default=0.1, type=float)
     # Language
-    parser.add_argument("--chance_not_sent", default=10, type=int)
+    parser.add_argument("--chance_not_sent", default=0.1, type=float)
 
     args = parser.parse_args()
     run(args)

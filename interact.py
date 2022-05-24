@@ -80,9 +80,9 @@ class ObservationParser:
         # Center
         elif obs[0][0] > -0.32 and obs[0][0] <= 0.32:
                if obs[0][1] < -0.32:
-                   position = "Center South"
+                   position = "South"
                elif obs[0][1] >= 0.32:
-                   position = "Center North"
+                   position = "North"
                else:
                    position = "Center"
         

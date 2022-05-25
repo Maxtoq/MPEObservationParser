@@ -62,11 +62,14 @@ class ObservationParser:
     def parse_obs(self, obs, sce_conf):
         # Sentence generated
         sentence = []
+        # Position of the agent
+        position = []
 
         #Generation of a NOT sentence ?
-        not_sentence = False
+        not_sentence = 0
         if random.random() <= self.args.chance_not_sent:
-            not_sentence = True
+            not_sentence = random.randint(1,3)
+
 
         # Position of the agent (at all time)
         sentence.append("Located")
@@ -74,18 +77,23 @@ class ObservationParser:
         # North / South
         if obs[0][1] >= 0.32:
             sentence.append("North")
+            position.append("North")
         if obs[0][1] < -0.32:
             sentence.append("South")
+            position.append("South")
         
         # West / East
         if obs[0][0] >= 0.32:
             sentence.append("East")
+            position.append("East")
         if obs[0][0] < -0.32:
             sentence.append("West")
+            position.append("West")
         
         # Center
         elif len(sentence) == 1:
             sentence.append("Center")
+            position.append("Center")
         
 
         # Position of the objects
@@ -99,11 +107,12 @@ class ObservationParser:
             place = place + object*5 
 
             # If not visible and not sentence
-            if not_sentence and obs[0][place] == 0:
-                if self.check_position(obs) :
+            if not_sentence == 1 or not_sentence == 3 and obs[0][place] == 0:
+                #if self.check_position(obs) :
                     # [1] and [2] are the positions of the agent
-                    sentence.extend(["Object","Not",
-                    sentence[1],sentence[2]])
+                    sentence.extend(["Object","Not"])
+                    for word in position:
+                        sentence.append(word)
 
             # If visible                                      
             if obs[0][place] == 1 :
@@ -133,11 +142,12 @@ class ObservationParser:
             place = place + landmark*3
 
             # If not visible and not sentence
-            if not_sentence and obs[0][place] == 0:
-                if self.check_position(obs):
+            if not_sentence == 2 or not_sentence == 3 and obs[0][place] == 0:
+                #if self.check_position(obs):
                     # [1] and [2] are the positions of the agent
-                    sentence.extend(["Landmark","Not",
-                    sentence[1],sentence[2]])
+                    sentence.extend(["Landmark","Not"])
+                    for word in position:
+                        sentence.append(word)
 
             # If visible
             if obs[0][place] == 1 :

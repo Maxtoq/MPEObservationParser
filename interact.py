@@ -11,24 +11,40 @@ from utils.make_env import make_env
 
 class KeyboardActor:
 
-    def __init__(self):
-        pass
+    def __init__(self, n_agents):
+        self.n_agents = n_agents
 
     def get_action(self):
+        actions = np.zeros((self.n_agents, 2))
+        actions[0] = np.array([0.0, 0.0])
+        actions[1] = np.array([0.0, 0.0])
+
         if keyboard.is_pressed('z'):
             print('z')
-            return np.array([[0.0, 0.5]])
+            actions[0] = np.array([0.0, 0.5])
         elif keyboard.is_pressed('s'):
             print('s')
-            return np.array([[0.0, -0.5]])
+            actions[0] = np.array([0.0, -0.5])
         elif keyboard.is_pressed('q'):
             print('q')
-            return np.array([[-0.5, 0.0]])
+            actions[0] = np.array([-0.5, 0])
         elif keyboard.is_pressed('d'):
             print('d')
-            return np.array([[0.5, 0.0]])
-        else:
-            return np.array([[0.0, 0.0]])
+            actions[0] = np.array([0.5, 0.0])
+        if keyboard.is_pressed('up arrow'):
+            print('up')
+            actions[1] = np.array([0.0, 0.5])
+        elif keyboard.is_pressed('down arrow'):
+            print('down')
+            actions[1] = np.array([0.0, -0.5])
+        elif keyboard.is_pressed('left arrow'):
+            print('left')
+            actions[1] = np.array([-0.5, 0])
+        elif keyboard.is_pressed('right arrow'):
+            print('right')
+            actions[1] = np.array([0.5, 0.0])
+
+        return actions
 
 
 class ObservationParser:
@@ -206,8 +222,8 @@ def run(args):
     else:
         init_pos_scenar = None
 
-    actor = KeyboardActor()
-    observation = ObservationParser()
+    actor = KeyboardActor(sce_conf["nb_agents"])
+    observation = ObservationParser(args)
     
     for ep_i in range(args.n_episodes):
         obs = env.reset(init_pos=init_pos_scenar)
@@ -215,8 +231,8 @@ def run(args):
             print("Step", step_i)
             print("Observations:", obs)
             # Get action
-            action = actor.get_action()
-            next_obs, rewards, dones, infos = env.step(action)
+            actions = actor.get_action()
+            next_obs, rewards, dones, infos = env.step(actions)
             print("Rewards:", rewards)
             # Get sentence
             sentence = observation.parse_obs(obs,sce_conf)

@@ -45,6 +45,136 @@ class KeyboardActor:
 
         return actions
 
+class ObservationParserStrat:
+    
+    def __init__(self, args):
+        self.args = args
+
+    def parse_obs_strat(self, obs, sce_conf):
+        # Sentence generated
+        sentence = []
+        # Position of the agent
+        position = []
+
+        # Position of the agent (at all time)
+        sentence.append("Located")
+        
+        # North / South
+        if obs[0][1] >= 0.32:
+            sentence.append("North")
+            position.append("North")
+        if obs[0][1] < -0.32:
+            sentence.append("South")
+            position.append("South")
+        
+        # West / East
+        if obs[0][0] >= 0.32:
+            sentence.append("East")
+            position.append("East")
+        if obs[0][0] < -0.32:
+            sentence.append("West")
+            position.append("West")
+        
+        # Center
+        elif len(sentence) == 1:
+            sentence.append("Center")
+            position.append("Center")
+        
+
+        # Position of the agent
+        # For each agents 
+        for agent in range(int(sce_conf['nb_agents'])):
+        # Calculate the place in the array
+            place = 4 # 4 values of the self agent
+            # 5 values for each agents (not self)
+            place = place + (int(sce_conf['nb_agents'])-1)*5 
+            # 5 values for each other objects
+
+            # If visible                                      
+            if obs[0][place] == 1 :
+                sentence.append("You")
+                 # North / South
+                if obs[0][place+2] >= 0.25:
+                    sentence.append("North")
+                if obs[0][place+2] < -0.25:
+                    sentence.append("South")
+                
+                # West / East
+                if obs[0][place+1] >= 0.25:
+                    sentence.append("East")
+                if obs[0][place+1] < -0.25:
+                    sentence.append("West")
+
+        # Position of the objects
+        # For each object 
+        for object in range(int(sce_conf['nb_objects'])):
+        # Calculate the place in the array
+            place = 4 # 4 values of the self agent
+            # 5 values for each agents (not self)
+            place = place + (int(sce_conf['nb_agents'])-1)*5 
+            # 5 values for each other objects
+            place = place + object*5 
+
+            # If visible                                      
+            if obs[0][place] == 1 :
+                sentence.append("Object")
+                 # North / South
+                if obs[0][place+2] >= 0.25:
+                    sentence.append("North")
+                if obs[0][place+2] < -0.25:
+                    sentence.append("South")
+                
+                # West / East
+                if obs[0][place+1] >= 0.25:
+                    sentence.append("East")
+                if obs[0][place+1] < -0.25:
+                    sentence.append("West")
+        
+        # Position of the Landmarks
+        # For each Landmark 
+        for landmark in range(int(sce_conf['nb_objects'])):
+        #Calculate the place in the array
+            place = 4 # 4 values of the self agent
+            # 5 values for each agents (not self)
+            place = place + (int(sce_conf['nb_agents'])-1)*5
+            # 5 values for each objects 
+            place = place + int(sce_conf['nb_objects'])*5 
+            # 3 values for each landmark
+            place = place + landmark*3
+
+            # If visible
+            if obs[0][place] == 1 :
+                sentence.append("Landmark")
+                
+                # North / South
+                if obs[0][place+2] >= 0.2:
+                    sentence.append("North")
+                if obs[0][place+2] < -0.2:
+                    sentence.append("South")
+                    
+                # West / East
+                if obs[0][place+1] >= 0.2:
+                    sentence.append("East")
+                if obs[0][place+1] < -0.2:
+                    sentence.append("West")
+                
+                #If we are close to landmark
+                elif (obs[0][place+2] < 0.2 and obs[0][place+2] >= -0.2 and
+                    obs[0][place+1] < 0.2 and obs[0][place+2] >= -0.2):
+                    # North / South
+                    if obs[0][place+2] >= 0:
+                        sentence.append("North")
+                    if obs[0][place+2] < 0:
+                        sentence.append("South")
+                        
+                    # West / East
+                    if obs[0][place+1] >= 0:
+                        sentence.append("East")
+                    if obs[0][place+1] < 0:
+                        sentence.append("West")
+
+        return sentence
+
 
 class ObservationParser:
     
@@ -69,6 +199,7 @@ class ObservationParser:
         not_sentence = 0
         if random.random() <= self.args.chance_not_sent:
             not_sentence = random.randint(1,3)
+            print("REGARDE: " + str(not_sentence))
 
 
         # Position of the agent (at all time)
@@ -107,7 +238,8 @@ class ObservationParser:
             place = place + object*5 
 
             # If not visible and not sentence
-            if not_sentence == 1 or not_sentence == 3 and obs[0][place] == 0:
+            if ((not_sentence == 1 or not_sentence == 3) 
+                and obs[0][place] == 0):
                 #if self.check_position(obs) :
                     # [1] and [2] are the positions of the agent
                     sentence.extend(["Object","Not"])
@@ -142,7 +274,8 @@ class ObservationParser:
             place = place + landmark*3
 
             # If not visible and not sentence
-            if not_sentence == 2 or not_sentence == 3 and obs[0][place] == 0:
+            if ((not_sentence == 2 or not_sentence == 3) 
+                and obs[0][place] == 0):
                 #if self.check_position(obs):
                     # [1] and [2] are the positions of the agent
                     sentence.extend(["Landmark","Not"])

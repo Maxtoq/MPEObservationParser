@@ -1,6 +1,5 @@
 import random
 import argparse
-from turtle import position
 import keyboard
 import json
 import time
@@ -48,7 +47,6 @@ class KeyboardActor:
 
 
 class ObservationParser:
-
     
     def __init__(self, args):
         self.args = args
@@ -61,12 +59,9 @@ class ObservationParser:
         else:
             return False
 
-
     def parse_obs(self, obs, sce_conf):
         # Sentence generated
-        sentence = ""
-        # Absolute position of the agent
-        position = ""
+        sentence = []
 
         #Generation of a NOT sentence ?
         not_sentence = False
@@ -74,35 +69,24 @@ class ObservationParser:
             not_sentence = True
 
         # Position of the agent (at all time)
-        sentence = "Located "
-        # East
-        if obs[0][0] >= 0.32:
-           if obs[0][1] >= 0.32:
-                position = "North East"
-           elif obs[0][1] < -0.32:
-                position = "South East"
-           else:
-               position = "East"
-
-        # West
-        elif obs[0][0] < -0.32:
-           if obs[0][1] >= 0.32:
-                position = "North West"
-           elif obs[0][1] < -0.32:
-                position = "South West"
-           else:
-              position = "West"
-
-        # Center
-        elif obs[0][0] > -0.32 and obs[0][0] <= 0.32:
-               if obs[0][1] < -0.32:
-                   position = "South"
-               elif obs[0][1] >= 0.32:
-                   position = "North"
-               else:
-                   position = "Center"
+        sentence.append("Located")
         
-        sentence = sentence + position
+        # North / South
+        if obs[0][1] >= 0.32:
+            sentence.append("North")
+        if obs[0][1] < -0.32:
+            sentence.append("South")
+        
+        # West / East
+        if obs[0][0] >= 0.32:
+            sentence.append("East")
+        if obs[0][0] < -0.32:
+            sentence.append("West")
+        
+        # Center
+        elif len(sentence) == 1:
+            sentence.append("Center")
+        
 
         # Position of the objects
         # For each object 
@@ -117,37 +101,25 @@ class ObservationParser:
             # If not visible and not sentence
             if not_sentence and obs[0][place] == 0:
                 if self.check_position(obs) :
-                    sentence = sentence + " Object Not " + position
+                    # [1] and [2] are the positions of the agent
+                    sentence.extend(["Object","Not",
+                    sentence[1],sentence[2]])
 
-            # If visible                                         
+            # If visible                                      
             if obs[0][place] == 1 :
-                sentence = sentence + " Object "
-                # East
-                if obs[0][place+1] >= 0.30:
-                    if obs[0][place+2] >= 0.30:
-                            sentence = sentence + "North East"
-                    elif obs[0][place+2] < -0.30:
-                            sentence = sentence + "South East"
-                    else:
-                        sentence = sentence + "East"
-
-                # West
-                elif obs[0][place+1] < -0.30:
-                    if obs[0][place+2] >= 0.30:
-                            sentence = sentence + "North West"
-                    elif obs[0][place+2] < -0.30:
-                            sentence = sentence + "South West"
-                    else:
-                        sentence = sentence + "West"
-
-                # North and South
-                elif obs[0][place+1] > -0.30 and obs[0][place+1] <= 0.30:
-                    if obs[0][place+2] < -0.30:
-                        sentence = sentence + "South"
-                    elif obs[0][place+2] >= 0.30:
-                        sentence = sentence + "North"
-
-
+                sentence.append("Object")
+                 # North / South
+                if obs[0][place+2] >= 0.25:
+                    sentence.append("North")
+                if obs[0][place+2] < -0.25:
+                    sentence.append("South")
+                
+                # West / East
+                if obs[0][place+1] >= 0.25:
+                    sentence.append("East")
+                if obs[0][place+1] < -0.25:
+                    sentence.append("West")
+        
         # Position of the Landmarks
         # For each Landmark 
         for landmark in range(int(sce_conf['nb_objects'])):
@@ -163,43 +135,42 @@ class ObservationParser:
             # If not visible and not sentence
             if not_sentence and obs[0][place] == 0:
                 if self.check_position(obs):
-                    sentence = sentence + " Landmark Not " + position
+                    # [1] and [2] are the positions of the agent
+                    sentence.extend(["Landmark","Not",
+                    sentence[1],sentence[2]])
 
             # If visible
             if obs[0][place] == 1 :
-                sentence = sentence + " Landmark "
-                print(str(obs[0][place+1]) + " " + str(obs[0][place+2]))
-                #East
-                if obs[0][place+1] >= 0.32:
-                    if obs[0][place+2] >= 0.32:
-                            sentence = sentence + "North East"
-                    elif obs[0][place+2] < -0.32:
-                            sentence = sentence + "South East"
-                    else:
-                        sentence = sentence + "East"
+                sentence.append("Landmark")
+                
+                # North / South
+                if obs[0][place+2] >= 0.2:
+                    sentence.append("North")
+                if obs[0][place+2] < -0.2:
+                    sentence.append("South")
+                    
+                # West / East
+                if obs[0][place+1] >= 0.2:
+                    sentence.append("East")
+                if obs[0][place+1] < -0.2:
+                    sentence.append("West")
+                
+                #If we are close to landmark
+                elif (obs[0][place+2] < 0.2 and obs[0][place+2] >= -0.2 and
+                    obs[0][place+1] < 0.2 and obs[0][place+2] >= -0.2):
+                    # North / South
+                    if obs[0][place+2] >= 0:
+                        sentence.append("North")
+                    if obs[0][place+2] < 0:
+                        sentence.append("South")
+                        
+                    # West / East
+                    if obs[0][place+1] >= 0:
+                        sentence.append("East")
+                    if obs[0][place+1] < 0:
+                        sentence.append("West")
 
-                #West
-                elif obs[0][place+1] < -0.32:
-                    if obs[0][place+2] >= 0.32:
-                            sentence = sentence + "North West"
-                    elif obs[0][place+2] < -0.32:
-                            sentence = sentence + "South West"
-                    else:
-                        sentence = sentence + "West"
-
-                #North and South
-                elif obs[0][place+1] > -0.32 and obs[0][place+1] <= 0.32:
-                    if obs[0][place+2] < -0.32:
-                        sentence = sentence + "South"
-                    elif obs[0][place+2] >= 0.32:
-                        sentence = sentence + "North"
-                    else:
-                        sentence = sentence + "Center" # If on top of the landmark                      OU NE RIEN METTRE ???
-
-        # Tokenizing
-        tokens = sentence.split(" ")
-
-        return tokens
+        return sentence
 
 
 def run(args):

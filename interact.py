@@ -160,14 +160,26 @@ class ObservationParserStrat:
 
                 # Is it moving but not pushing
                 if not push:
+                    sentence.extend(["You","Search"])
+                    search = False
                     if obs[0][place+4] > 0.5:
-                        sentence.extend(["You","Search","North"])
-                    elif obs[0][place+4] < -0.5:
-                        sentence.extend(["You","Search","South"])
-                    elif obs[0][place+3] > 0.5:
-                        sentence.extend(["You","Search","East"])
-                    elif obs[0][place+3] < -0.5:
-                        sentence.extend(["You","Search","West"])
+                        sentence.append("North")
+                        search = True
+                    if obs[0][place+4] < -0.5:
+                        sentence.append("South")
+                        search = True
+                    if obs[0][place+3] > 0.5:
+                        sentence.append("East")
+                        search = True
+                    if obs[0][place+3] < -0.5:
+                        sentence.append("West")
+                        search = True
+                    # If the agent is not moving
+                    # Remove the beginning of the sentence
+                    if not search:
+                        sentence.pop()
+                        sentence.pop()
+
 
                 
 
@@ -266,14 +278,26 @@ class ObservationParserStrat:
 
         # Search
         if not push:
+            sentence.extend(["I","Search"])
+            search = False
             if obs[0][3] > 0.5:
-                sentence.extend(["I","Search","North"])
-            elif obs[0][3] < -0.5:
-                sentence.extend(["I","Search","South"])
-            elif obs[0][2] > 0.5:
-                sentence.extend(["I","Search","East"])
-            elif obs[0][2] < -0.5:
-                sentence.extend(["I","Search","West"])
+                sentence.append("North")
+                search = True
+            if obs[0][3] < -0.5:
+                sentence.append("South")
+                search = True
+            if obs[0][2] > 0.5:
+                sentence.append("East")
+                search = True
+            if obs[0][2] < -0.5:
+                sentence.append("West")
+                search = True
+            # If the agent is not moving
+            # Remove the beginning of the sentence
+            if not search:
+                sentence.pop()
+                sentence.pop()
+
 
         print("Vitesse: " + str(obs[0][2]) + " " + str(obs[0][3]))
 

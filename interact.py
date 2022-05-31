@@ -1,4 +1,5 @@
 import random
+from math import sqrt
 import argparse
 import keyboard
 import json
@@ -6,6 +7,7 @@ import time
 import numpy as np
 
 from utils.make_env import make_env
+from env.coop_push_scenario_sparse import get_dist
 
 
 class KeyboardActor:
@@ -20,28 +22,28 @@ class KeyboardActor:
 
         if keyboard.is_pressed('z'):
             print('z')
-            actions[0] = np.array([0.0, 0.5])
-        elif keyboard.is_pressed('s'):
+            actions[0] += np.array([0.0, 0.5])
+        if keyboard.is_pressed('s'):
             print('s')
-            actions[0] = np.array([0.0, -0.5])
-        elif keyboard.is_pressed('q'):
+            actions[0] += np.array([0.0, -0.5])
+        if keyboard.is_pressed('q'):
             print('q')
-            actions[0] = np.array([-0.5, 0])
-        elif keyboard.is_pressed('d'):
+            actions[0] += np.array([-0.5, 0])
+        if keyboard.is_pressed('d'):
             print('d')
-            actions[0] = np.array([0.5, 0.0])
+            actions[0] += np.array([0.5, 0.0])
         if keyboard.is_pressed('up arrow'):
             print('up')
-            actions[1] = np.array([0.0, 0.5])
-        elif keyboard.is_pressed('down arrow'):
+            actions[1] += np.array([0.0, 0.5])
+        if keyboard.is_pressed('down arrow'):
             print('down')
-            actions[1] = np.array([0.0, -0.5])
-        elif keyboard.is_pressed('left arrow'):
+            actions[1] += np.array([0.0, -0.5])
+        if keyboard.is_pressed('left arrow'):
             print('left')
-            actions[1] = np.array([-0.5, 0])
-        elif keyboard.is_pressed('right arrow'):
+            actions[1] += np.array([-0.5, 0])
+        if keyboard.is_pressed('right arrow'):
             print('right')
-            actions[1] = np.array([0.5, 0.0])
+            actions[1] += np.array([0.5, 0.0])
 
         return actions
 
@@ -55,6 +57,8 @@ class ObservationParserStrat:
         sentence = []
         # Position of the agent
         position = []
+        # If the action of pushing happens
+        push = False
 
         # Position of the agent (at all time)
         sentence.append("Located")
@@ -83,27 +87,47 @@ class ObservationParserStrat:
 
         # Position of the agent
         # For each agents 
-        for agent in range(int(sce_conf['nb_agents'])):
+        for agent in range(int(sce_conf['nb_agents'])-1):
         # Calculate the place in the array
             place = 4 # 4 values of the self agent
-            # 5 values for each agents (not self)
-            place = place + (int(sce_conf['nb_agents'])-1)*5 
-            # 5 values for each other objects
+            # 5 values for each agents 
+            place = place + agent*5 
 
             # If visible                                      
             if obs[0][place] == 1 :
+
+                # Position
                 sentence.append("You")
+                collision = True
                  # North / South
-                if obs[0][place+2] >= 0.25:
+                if obs[0][place+2] >= 0.15:
                     sentence.append("North")
-                if obs[0][place+2] < -0.25:
+                    collision = False
+                if obs[0][place+2] < -0.15:
                     sentence.append("South")
+                    collision = False
                 
                 # West / East
-                if obs[0][place+1] >= 0.25:
+                if obs[0][place+1] >= 0.15:
                     sentence.append("East")
-                if obs[0][place+1] < -0.25:
+                    collision = False
+                if obs[0][place+1] < -0.15:
                     sentence.append("West")
+                    collision = False
+                # If collision, don't print anything about the position
+                if collision :
+                    sentence.pop()
+
+                # Is it moving ?
+                if obs[0][place+4] > 0.5:
+                    sentence.extend(["You","Search","North"])
+                elif obs[0][place+4] < -0.5:
+                    sentence.extend(["You","Search","South"])
+                elif obs[0][place+3] > 0.5:
+                    sentence.extend(["You","Search","East"])
+                elif obs[0][place+3] < -0.5:
+                    sentence.extend(["You","Search","West"])
+
 
         # Position of the objects
         # For each object 
@@ -129,6 +153,30 @@ class ObservationParserStrat:
                     sentence.append("East")
                 if obs[0][place+1] < -0.25:
                     sentence.append("West")
+
+                # Calculate the distance of the center of the object from the agent
+                distance = obs[0][place+1]*obs[0][place+1] + obs[0][place+2]*obs[0][place+2]
+                distance = sqrt(distance)
+                
+                """print("Distance: " + str(distance))
+                print("Pos Obj: " + str(obs[0][place+1]) + " " + str(obs[0][place+2]))
+                print("Vit Obj: " + str(obs[0][place+3]) + " " + str(obs[0][place+4]))"""
+
+                # If collision
+                if distance < 0.47:
+                    sentence.extend(["I","Push","Object"])
+                    push = True
+                    # Calculate where the object was pushed 
+                    # Based on its distance from the agent
+                    if obs[0][place+2] > 0.20 and obs[0][place+2] < 0.50 :
+                        sentence.append("North")
+                    if obs[0][place+2] < -0.20 and obs[0][place+2] > -0.50 :
+                        sentence.append("South")
+                    if obs[0][place+1] > 0.20 and obs[0][place+1] < 0.50 :
+                        sentence.append("East")
+                    if obs[0][place+1] < -0.20 and obs[0][place+1] > -0.50:
+                        sentence.append("West")
+                
         
         # Position of the Landmarks
         # For each Landmark 
@@ -172,6 +220,19 @@ class ObservationParserStrat:
                         sentence.append("East")
                     if obs[0][place+1] < 0:
                         sentence.append("West")
+
+        # Search
+        if not push:
+            if obs[0][3] > 0.5:
+                sentence.extend(["I","Search","North"])
+            elif obs[0][3] < -0.5:
+                sentence.extend(["I","Search","South"])
+            elif obs[0][2] > 0.5:
+                sentence.extend(["I","Search","East"])
+            elif obs[0][2] < -0.5:
+                sentence.extend(["I","Search","West"])
+
+        print("Vitesse: " + str(obs[0][2]) + " " + str(obs[0][3]))
 
         return sentence
 
@@ -337,7 +398,7 @@ def run(args):
         init_pos_scenar = None
 
     actor = KeyboardActor(sce_conf["nb_agents"])
-    observation = ObservationParser(args)
+    observation = ObservationParserStrat(args)
     
     for ep_i in range(args.n_episodes):
         obs = env.reset(init_pos=init_pos_scenar)
@@ -349,7 +410,7 @@ def run(args):
             next_obs, rewards, dones, infos = env.step(actions)
             print("Rewards:", rewards)
             # Get sentence
-            sentence = observation.parse_obs(obs,sce_conf)
+            sentence = observation.parse_obs_strat(obs,sce_conf)
             print(sentence)
 
             time.sleep(args.step_time)

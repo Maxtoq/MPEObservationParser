@@ -137,11 +137,11 @@ class ObservationParserStrat:
                         y = obs[0][place+2] - obs[0][spot+2]
                         distance = x*x + y*y
                         distance = sqrt(distance)
-                        print("agent: " + str(obs[0][place+1]) + " " + str(obs[0][place+2]))
+                        """print("agent: " + str(obs[0][place+1]) + " " + str(obs[0][place+2]))
                         print("Object: " + str(obs[0][spot+1]) + " " + str(obs[0][spot+2]))
                         print("X: " + str(x))
                         print("Y: " + str(y))
-                        print("Distance entre agent et objet: " + str(distance))
+                        print("Distance entre agent et objet: " + str(distance))"""
                         
                         # If collision
                         if distance < 0.47:

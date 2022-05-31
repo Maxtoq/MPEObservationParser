@@ -114,19 +114,62 @@ class ObservationParserStrat:
                 if obs[0][place+1] < -0.15:
                     sentence.append("West")
                     collision = False
-                # If collision, don't print anything about the position
+                # If collision with self
+                # Don't print anything about the position
                 if collision :
                     sentence.pop()
 
-                # Is it moving ?
-                if obs[0][place+4] > 0.5:
-                    sentence.extend(["You","Search","North"])
-                elif obs[0][place+4] < -0.5:
-                    sentence.extend(["You","Search","South"])
-                elif obs[0][place+3] > 0.5:
-                    sentence.extend(["You","Search","East"])
-                elif obs[0][place+3] < -0.5:
-                    sentence.extend(["You","Search","West"])
+
+                # Is it pushing an object
+                for object in range(int(sce_conf['nb_objects'])):
+                    # Calculate the place in the array
+                    spot = 4 # 4 values of the self agent
+                    # 5 values for each agents (not self)
+                    spot = spot + (int(sce_conf['nb_agents'])-1)*5 
+                    # 5 values for each other objects
+                    spot = spot + object*5 
+
+                    # If visible                                      
+                    if obs[0][spot] == 1 :
+                        # Is it pushing ?
+                        # Calculate the distance of the center of the object from the agent
+                        x = obs[0][place+1] - obs[0][spot+1]
+                        y = obs[0][place+2] - obs[0][spot+2]
+                        distance = x*x + y*y
+                        distance = sqrt(distance)
+                        print("agent: " + str(obs[0][place+1]) + " " + str(obs[0][place+2]))
+                        print("Object: " + str(obs[0][spot+1]) + " " + str(obs[0][spot+2]))
+                        print("X: " + str(x))
+                        print("Y: " + str(y))
+                        print("Distance entre agent et objet: " + str(distance))
+                        
+                        # If collision
+                        if distance < 0.47:
+                            sentence.extend(["You","Push","Object"])
+                            push = True
+                            # Calculate where the object was pushed 
+                            # Based on its distance from the agent
+                            if y > 0.20 and y < 0.50 :
+                                sentence.append("South")
+                            if y < -0.20 and y > -0.50 :
+                                sentence.append("North")
+                            if x > 0.20 and x < 0.50 :
+                                sentence.append("West")
+                            if x < -0.20 and x > -0.50:
+                                sentence.append("East")
+
+                # Is it moving but not pushing
+                if not push:
+                    if obs[0][place+4] > 0.5:
+                        sentence.extend(["You","Search","North"])
+                    elif obs[0][place+4] < -0.5:
+                        sentence.extend(["You","Search","South"])
+                    elif obs[0][place+3] > 0.5:
+                        sentence.extend(["You","Search","East"])
+                    elif obs[0][place+3] < -0.5:
+                        sentence.extend(["You","Search","West"])
+
+                
 
 
         # Position of the objects
@@ -427,7 +470,7 @@ if __name__ == "__main__":
                         help="Path to the environment")
     parser.add_argument("--sce_conf_path", default="configs/1a_1o_po_rel.json", 
                         type=str, help="Path to the scenario config file")
-    parser.add_argument("--sce_init_pos", default=None, 
+    parser.add_argument("--sce_init_pos", default="init_pos/test.json", 
                         type=str, help="Path to initial positions config file")
     # Environment
     parser.add_argument("--n_episodes", default=1, type=int)

@@ -47,10 +47,49 @@ class KeyboardActor:
 
         return actions
 
+"""class TrackingAgent:
+
+    directions = []
+    time = 0
+
+    def __init__(self):
+        pass
+
+    def update_direction(self, direction):
+        if self.directions == direction:
+            time = time + 1
+        else:
+            self.directions = direction
+        
+        if time == 3:
+            return True
+        else:
+            return False"""
+
+
 class ObservationParserStrat:
     
     def __init__(self, args):
         self.args = args
+        self.directions = []
+        self.time = 0
+
+    def update_direction(self, direction):
+        # Check if the current direction of the agent
+        # Is the same as the old direction
+        if self.directions == direction:
+            # Increment time by 1
+            self.time = self.time + 1
+        # Or reset the direction and time
+        else:
+            self.directions = direction
+            self.time = 0
+        
+        # If the agent is going in the same direction for a long time
+        if self.time >= 2 and self.directions != [] :
+            return True
+        else:
+            return False
 
     def parse_obs_strat(self, obs, sce_conf):
         # Sentence generated
@@ -59,6 +98,10 @@ class ObservationParserStrat:
         position = []
         # If the action of pushing happens
         push = False
+        
+        # Direction of the agent
+        direction = []
+        time = 0
 
         # Position of the agent (at all time)
         sentence.append("Located")
@@ -137,11 +180,6 @@ class ObservationParserStrat:
                         y = obs[0][place+2] - obs[0][spot+2]
                         distance = x*x + y*y
                         distance = sqrt(distance)
-                        """print("agent: " + str(obs[0][place+1]) + " " + str(obs[0][place+2]))
-                        print("Object: " + str(obs[0][spot+1]) + " " + str(obs[0][spot+2]))
-                        print("X: " + str(x))
-                        print("Y: " + str(y))
-                        print("Distance entre agent et objet: " + str(distance))"""
                         
                         # If collision
                         if distance < 0.47:
@@ -157,9 +195,10 @@ class ObservationParserStrat:
                                 sentence.append("West")
                             if x < -0.20 and x > -0.50:
                                 sentence.append("East")
-
+                
+                # SEARCH FOR OTHER AGENTS
                 # Is it moving but not pushing
-                if not push:
+                """if not push:
                     sentence.extend(["You","Search"])
                     search = False
                     if obs[0][place+4] > 0.5:
@@ -178,10 +217,7 @@ class ObservationParserStrat:
                     # Remove the beginning of the sentence
                     if not search:
                         sentence.pop()
-                        sentence.pop()
-
-
-                
+                        sentence.pop()"""
 
 
         # Position of the objects
@@ -212,10 +248,7 @@ class ObservationParserStrat:
                 # Calculate the distance of the center of the object from the agent
                 distance = obs[0][place+1]*obs[0][place+1] + obs[0][place+2]*obs[0][place+2]
                 distance = sqrt(distance)
-                
-                """print("Distance: " + str(distance))
-                print("Pos Obj: " + str(obs[0][place+1]) + " " + str(obs[0][place+2]))
-                print("Vit Obj: " + str(obs[0][place+3]) + " " + str(obs[0][place+4]))"""
+    
 
                 # If collision
                 if distance < 0.47:
@@ -277,26 +310,35 @@ class ObservationParserStrat:
                         sentence.append("West")
 
         # Search
-        if not push:
-            sentence.extend(["I","Search"])
-            search = False
-            if obs[0][3] > 0.5:
-                sentence.append("North")
-                search = True
-            if obs[0][3] < -0.5:
-                sentence.append("South")
-                search = True
-            if obs[0][2] > 0.5:
-                sentence.append("East")
-                search = True
-            if obs[0][2] < -0.5:
-                sentence.append("West")
-                search = True
-            # If the agent is not moving
-            # Remove the beginning of the sentence
-            if not search:
-                sentence.pop()
-                sentence.pop()
+        # Set the direction vector depending on the direction of the agent 
+        if obs[0][3] > 0.5:
+            direction.append("North")
+        if obs[0][3] < -0.5:
+            direction.append("South")
+        if obs[0][2] > 0.5:
+            direction.append("East")
+        if obs[0][2] < -0.5:
+            direction.append("West")
+        
+        # Check if it had the same direction for a long time
+        if self.update_direction(direction):
+            # If not pushing generate the sentence
+            # Depending on the speed of the agent
+            if not push:
+                sentence.extend(["I","Search"])
+                search = False
+                if obs[0][3] > 0.5:
+                    sentence.append("North")
+                    search = True
+                if obs[0][3] < -0.5:
+                    sentence.append("South")
+                    search = True
+                if obs[0][2] > 0.5:
+                    sentence.append("East")
+                    search = True
+                if obs[0][2] < -0.5:
+                    sentence.append("West")
+                    search = True
 
 
         print("Vitesse: " + str(obs[0][2]) + " " + str(obs[0][3]))
@@ -465,6 +507,10 @@ def run(args):
         init_pos_scenar = None
 
     actor = KeyboardActor(sce_conf["nb_agents"])
+    """agents = []
+    for agent in range(sce_conf["nb_agents"]):
+        agents.append(TrackingAgent())"""
+
     observation = ObservationParserStrat(args)
     
     for ep_i in range(args.n_episodes):

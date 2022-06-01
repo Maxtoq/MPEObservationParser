@@ -101,7 +101,6 @@ class ObservationParserStrat:
         
         # Direction of the agent
         direction = []
-        time = 0
 
         # Position of the agent (at all time)
         sentence.append("Located")
@@ -326,22 +325,14 @@ class ObservationParserStrat:
             # Depending on the speed of the agent
             if not push:
                 sentence.extend(["I","Search"])
-                search = False
                 if obs[0][3] > 0.5:
                     sentence.append("North")
-                    search = True
                 if obs[0][3] < -0.5:
                     sentence.append("South")
-                    search = True
                 if obs[0][2] > 0.5:
                     sentence.append("East")
-                    search = True
                 if obs[0][2] < -0.5:
                     sentence.append("West")
-                    search = True
-
-
-        print("Vitesse: " + str(obs[0][2]) + " " + str(obs[0][3]))
 
         return sentence
 

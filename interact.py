@@ -74,6 +74,398 @@ class ObservationParserStrat:
         self.directions = []
         self.time = 0
 
+        # Initialization of the world map
+        # To track the agent
+        self.world = []
+        for line in range(8):
+            newLine = []
+            for col in range(8):
+                newLine.append(0)
+            self.world.append(newLine)
+
+        # Initialization of the area map
+        # Each 0 is an area (North, South, West, East)
+        # That has not been fully discovered
+        self.area = [0,0,0,0]
+
+        # Initialization of the area map with objects
+        # Each 0 is the number of objects found in the area
+        self.area_obj = [0,0,0,0]
+        
+    def update_world(self, posX, posY):
+        
+        # 0 means not discovered
+        # 1 means discovered
+
+        #Check the position of the agent
+        # To update the value of the world
+        
+        # North
+        # If North not discovered
+        if self.area[0] != 1:
+            if posY >= 0.72 :
+                # If West not discovered
+                if self.area[2] != 1:
+                    if posX <= -0.72:
+                        self.world[0][0] = 1
+                    if posX >= -0.72 and posX <= -0.44:
+                        self.world[0][1] = 1
+                    if posX >= -0.44 and posX <= -0.16:
+                        self.world[0][2] = 1
+                if posX >= -0.16 and posX <= 0.12:
+                    self.world[0][3] = 1
+                if posX >= 0.12 and posX <= 0.4:
+                    self.world[0][4] = 1
+                # If East not discovered
+                if self.area[3] != 1:
+                    if posX >= 0.4 and posX <= 0.68:
+                        self.world[0][5] = 1
+                    if posX >= 0.68 and posX <= 0.96:
+                        self.world[0][6] = 1
+                    if posX >= 0.72:
+                        self.world[0][7] = 1
+
+            if posY >= 0.44 and posY <= 0.72 :
+                # If West not discovered
+                if self.area[2] != 1:
+                    if posX <= -0.72:
+                        self.world[1][0] = 1
+                    if posX >= -0.72 and posX <= -0.44:
+                        self.world[1][1] = 1
+                    if posX >= -0.44 and posX <= -0.16:
+                        self.world[1][2] = 1
+                if posX >= -0.16 and posX <= 0.12:
+                    self.world[1][3] = 1
+                if posX >= 0.12 and posX <= 0.4:
+                    self.world[1][4] = 1
+                # If East not discovered
+                if self.area[3] != 1:
+                    if posX >= 0.4 and posX <= 0.68:
+                        self.world[1][5] = 1
+                    if posX >= 0.68 and posX <= 0.96:
+                        self.world[1][6] = 1
+                    if posX >= 0.72:
+                        self.world[1][7] = 1
+
+            if posY >= 0.16 and posY <= 0.44 :
+                # If West not discovered
+                if self.area[2] != 1:
+                    if posX <= -0.72:
+                        self.world[2][0] = 1
+                    if posX >= -0.72 and posX <= -0.44:
+                        self.world[2][1] = 1
+                    if posX >= -0.44 and posX <= -0.16:
+                        self.world[2][2] = 1
+                if posX >= -0.16 and posX <= 0.12:
+                    self.world[2][3] = 1
+                if posX >= 0.12 and posX <= 0.4:
+                    self.world[2][4] = 1
+                # If East not discovered
+                if self.area[3] != 1:
+                    if posX >= 0.4 and posX <= 0.68:
+                        self.world[2][5] = 1
+                    if posX >= 0.68 and posX <= 0.96:
+                        self.world[2][6] = 1
+                    if posX >= 0.72:
+                        self.world[2][7] = 1
+
+        # Center
+        if posY >= -0.12 and posY <= 0.16 :
+            # If West not discovered
+            if self.area[2] != 1:
+                if posX <= -0.72:
+                    self.world[3][0] = 1
+                if posX >= -0.72 and posX <= -0.44:
+                    self.world[3][1] = 1
+                if posX >= -0.44 and posX <= -0.16:
+                    self.world[3][2] = 1
+            if posX >= -0.16 and posX <= 0.12:
+                self.world[3][3] = 1
+            if posX >= 0.12 and posX <= 0.4:
+                self.world[3][4] = 1
+            # If East not discovered
+            if self.area[3] != 1:
+                if posX >= 0.4 and posX <= 0.68:
+                    self.world[3][5] = 1
+                if posX >= 0.68 and posX <= 0.96:
+                    self.world[3][6] = 1
+                if posX >= 0.72:
+                    self.world[3][7] = 1
+        
+        # South
+        if self.area[1] != 1:
+            if posY >= -0.4 and posY <= -0.12 :
+                # If West not discovered
+                if self.area[2] != 1:
+                    if posX <= -0.72:
+                        self.world[4][0] = 1
+                    if posX >= -0.72 and posX <= -0.44:
+                        self.world[4][1] = 1
+                    if posX >= -0.44 and posX <= -0.16:
+                        self.world[4][2] = 1
+                if posX >= -0.16 and posX <= 0.12:
+                    self.world[4][3] = 1
+                if posX >= 0.12 and posX <= 0.4:
+                    self.world[4][4] = 1
+                # If East not discovered
+                if self.area[3] != 1:
+                    if posX >= 0.4 and posX <= 0.68:
+                        self.world[4][5] = 1
+                    if posX >= 0.68 and posX <= 0.96:
+                        self.world[4][6] = 1
+                    if posX >= 0.72:
+                        self.world[4][7] = 1
+        
+        
+            if posY >= -0.68 and posY <= -0.4 :
+                # If West not discovered
+                if self.area[2] != 1:
+                    if posX <= -0.72:
+                        self.world[5][0] = 1
+                    if posX >= -0.72 and posX <= -0.44:
+                        self.world[5][1] = 1
+                    if posX >= -0.44 and posX <= -0.16:
+                        self.world[5][2] = 1
+                if posX >= -0.16 and posX <= 0.12:
+                    self.world[5][3] = 1
+                if posX >= 0.12 and posX <= 0.4:
+                    self.world[5][4] = 1
+                # If East not discovered
+                if self.area[3] != 1:
+                    if posX >= 0.4 and posX <= 0.68:
+                        self.world[5][5] = 1
+                    if posX >= 0.68 and posX <= 0.96:
+                        self.world[5][6] = 1
+                    if posX >= 0.72:
+                        self.world[5][7] = 1
+
+            if posY >= -0.96 and posY <= -0.68 :
+                # If West not discovered
+                if self.area[2] != 1:
+                    if posX <= -0.72:
+                        self.world[6][0] = 1
+                    if posX >= -0.72 and posX <= -0.44:
+                        self.world[6][1] = 1
+                    if posX >= -0.44 and posX <= -0.16:
+                        self.world[6][2] = 1
+                if posX >= -0.16 and posX <= 0.12:
+                    self.world[6][3] = 1
+                if posX >= 0.12 and posX <= 0.4:
+                    self.world[6][4] = 1
+                # If East not discovered
+                if self.area[3] != 1:
+                    if posX >= 0.4 and posX <= 0.68:
+                        self.world[6][5] = 1
+                    if posX >= 0.68 and posX <= 0.96:
+                        self.world[6][6] = 1
+                    if posX >= 0.72:
+                        self.world[6][7] = 1
+
+            if posY <= -0.72 :
+                # If West not discovered
+                if self.area[2] != 1:
+                    if posX <= -0.72:
+                        self.world[7][0] = 1
+                    if posX >= -0.72 and posX <= -0.44:
+                        self.world[7][1] = 1
+                    if posX >= -0.44 and posX <= -0.16:
+                        self.world[7][2] = 1
+                if posX >= -0.16 and posX <= 0.12:
+                    self.world[7][3] = 1
+                if posX >= 0.12 and posX <= 0.4:
+                    self.world[7][4] = 1
+                # If East not discovered
+                if self.area[3] != 1:
+                    if posX >= 0.4 and posX <= 0.68:
+                        self.world[7][5] = 1
+                    if posX >= 0.68 and posX <= 0.96:
+                        self.world[7][6] = 1
+                    if posX >= 0.72:
+                        self.world[7][7] = 1
+        
+        for l in range(8) :   
+            print(self.world[l])
+
+    def update_area(self):
+        # Check the world to see if some area were fully discovered
+
+        # If North is not fully discovered
+        if self.area[0] != 1:
+            print("check N")
+            count = 0
+            for i in range(3) :
+                for j in range(8):
+                    if self.world[i][j] == 1 :
+                        count = count + 1
+                    else:
+                        break
+            if count == 24:
+                print("All checked")
+                if self.area[0] == 0:
+                    self.area[0] = 1
+                    return self.not_sentence(0)
+                else:
+                    return self.not_sentence(0)
+        else :
+            print("N")
+
+        # If South is not fully discovered
+        if self.area[1] != 1:
+            print("check S")
+            count = 0
+            for i in range(4,8) :
+                for j in range(8):
+                    if self.world[i][j] == 1 :
+                        count = count + 1
+                    else:
+                        break
+            if count == 32:
+                print("All checked")
+                if self.area[1] == 0:
+                    self.area[1] = 1
+                    return self.not_sentence(1)
+                else:
+                    return self.not_sentence(1)
+        else :
+            print("S")
+
+        # If West is not fully discovered
+        if self.area[2] != 1:
+            print("check W")
+            count = 0
+            for i in range(3) :
+                for j in range(8):
+                    if self.world[j][i] == 1 :
+                        count = count + 1
+                    else:
+                        break
+            if count == 24:
+                print("All checked")
+                if self.area[2] == 0:
+                    self.area[2] = 1
+                    return self.not_sentence(2)
+                else:
+                    return  self.not_sentence(2)
+        else :
+            print("W")
+
+        # If East is not fully discovered
+        if self.area[3] != 1:
+            print("check E")
+            count = 0
+            for i in range(4,8) :
+                for j in range(8):
+                    if self.world[j][i] == 1 :
+                        count = count + 1
+                    else:
+                        break
+            if count == 32:
+                print("All checked")
+                if self.area[3] == 0:
+                    self.area[3] = 1
+                    return self.not_sentence(3)
+                else:
+                    return self.not_sentence(3)
+        else :
+            print("E")
+
+    def reset_area(self, num):
+
+        self.area[num] = 0
+        # If the area was North
+        if num == 0:
+            for i in range(3) :
+                for j in range(8):
+                    self.world[i][j] = 0 
+
+        # If the area was South
+        if num == 1:
+            for i in range(4,8) :
+                for j in range(8):
+                    self.world[i][j] = 0 
+
+        # If the area was West
+        if num == 2:
+            for i in range(3) :
+                for j in range(8):
+                    self.world[j][i] = 0 
+
+        # If the area was East
+        if num == 3:
+            for i in range(4,8) :
+                for j in range(8):
+                    self.world[j][i] = 0 
+
+
+
+    def not_sentence(self, i):
+        print("------------- NOT SENTENCE ------------")
+        print(self.area)
+        print(str(self.area[i]))
+        if self.area[i] == 1:
+            self.reset_area(i)
+            if i == 0 :
+                return ["Object","Not","North","Landmark","Not","North"]
+            if i == 1 :
+                return ["Object","Not","South","Landmark","Not","South"]
+            if i == 2 :
+                return ["Object","Not","West","Landmark","Not","West"]
+            if i == 3 :
+                return ["Object","Not","East","Landmark","Not","East"]
+        elif self.area[i] == 3 :
+            self.reset_area(i)
+            if i == 0 :
+                return ["Object","Not","North"]
+            if i == 1 :
+                return ["Object","Not","South"]
+            if i == 2 :
+                return ["Object","Not","West"]
+            if i == 3 :
+                return ["Object","Not","East"]
+        elif self.area[i] == 2 :
+            self.reset_area(i)
+            if i == 0 :
+                return ["Landmark","Not","North"]
+            if i == 1 :
+                return ["Landmark","Not","South"]
+            if i == 2 :
+                return ["Landmark","Not","West"]
+            if i == 3 :
+                return ["Landmark","Not","East"]
+        # Otherwise it == 4 and means the 2 objects are there 
+        else: 
+            self.reset_area(i)
+
+
+    def update_area_obj(self, agent_x, agent_y, num):
+        # Num : 2 if object
+        #       3 if landmark
+        # North / South
+        if agent_y >= 0.32:
+            if self.area[0] != 0:
+                self.area[0] = 4
+            else:
+                self.area[0] = num
+        if agent_y < -0.32:
+            if self.area[1] != 0:
+                self.area[1] = 4
+            else:
+                self.area[1] = num
+        
+        # East / West
+        if agent_x >= 0.32:
+            if self.area[3] != 0:
+                self.area[3] = 4
+            else:
+                self.area[3] = num
+        if agent_x < -0.32:
+            if self.area[2] != 0:
+                self.area[2] = 4
+            else:
+                self.area[2] = num
+
+        pass
+
     def update_direction(self, direction):
         # Check if the current direction of the agent
         # Is the same as the old direction
@@ -101,6 +493,7 @@ class ObservationParserStrat:
         
         # Direction of the agent
         direction = []
+
 
         # Position of the agent (at all time)
         sentence.append("Located")
@@ -173,8 +566,10 @@ class ObservationParserStrat:
 
                     # If visible                                      
                     if obs[0][spot] == 1 :
+
                         # Is it pushing ?
-                        # Calculate the distance of the center of the object from the agent
+                        # Calculate the distance of the center 
+                        # Of the object from the agent
                         x = obs[0][place+1] - obs[0][spot+1]
                         y = obs[0][place+2] - obs[0][spot+2]
                         distance = x*x + y*y
@@ -231,6 +626,10 @@ class ObservationParserStrat:
 
             # If visible                                      
             if obs[0][place] == 1 :
+
+                #We update the area_obj
+                self.update_area_obj(obs[0][0],obs[0][1],2)
+
                 sentence.append("Object")
                  # North / South
                 if obs[0][place+2] >= 0.25:
@@ -245,7 +644,8 @@ class ObservationParserStrat:
                     sentence.append("West")
 
                 # Calculate the distance of the center of the object from the agent
-                distance = obs[0][place+1]*obs[0][place+1] + obs[0][place+2]*obs[0][place+2]
+                distance = obs[0][place+1]*obs[0][place+1] + \
+                    obs[0][place+2]*obs[0][place+2]
                 distance = sqrt(distance)
     
 
@@ -279,6 +679,10 @@ class ObservationParserStrat:
 
             # If visible
             if obs[0][place] == 1 :
+
+                #We update the area_obj
+                self.update_area_obj(obs[0][0],obs[0][1],3)
+
                 sentence.append("Landmark")
                 
                 # North / South
@@ -333,6 +737,15 @@ class ObservationParserStrat:
                     sentence.append("East")
                 if obs[0][2] < -0.5:
                     sentence.append("West")
+
+
+        # Update the world variable to see what the agent
+        # Has discovered (to generate not sentences)
+        self.update_world(obs[0][0],obs[0][1])
+        temp = self.update_area()
+        if temp != None:
+            print("not none")
+            sentence.extend(temp)
 
         return sentence
 
@@ -503,6 +916,8 @@ def run(args):
         agents.append(TrackingAgent())"""
 
     observation = ObservationParserStrat(args)
+    # Save all the sentences generated
+    #sentences = []
     
     for ep_i in range(args.n_episodes):
         obs = env.reset(init_pos=init_pos_scenar)
@@ -516,6 +931,7 @@ def run(args):
             # Get sentence
             sentence = observation.parse_obs_strat(obs,sce_conf)
             print(sentence)
+            #sentences.append(sentence)
 
             time.sleep(args.step_time)
             env.render()
@@ -523,6 +939,8 @@ def run(args):
             if dones[0]:
                 break
             obs = next_obs
+    
+    #print(sentences)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -531,7 +949,7 @@ if __name__ == "__main__":
                         help="Path to the environment")
     parser.add_argument("--sce_conf_path", default="configs/1a_1o_po_rel.json", 
                         type=str, help="Path to the scenario config file")
-    parser.add_argument("--sce_init_pos", default="init_pos/test.json", 
+    parser.add_argument("--sce_init_pos", default=None, 
                         type=str, help="Path to initial positions config file")
     # Environment
     parser.add_argument("--n_episodes", default=1, type=int)

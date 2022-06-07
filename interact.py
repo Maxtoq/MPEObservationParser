@@ -1,5 +1,7 @@
 import random
 from math import sqrt
+import matplotlib.pyplot as plt
+from textwrap import wrap
 import argparse
 import keyboard
 import json
@@ -773,7 +775,6 @@ class ObservationParser:
         not_sentence = 0
         if random.random() <= self.args.chance_not_sent:
             not_sentence = random.randint(1,3)
-            print("REGARDE: " + str(not_sentence))
 
 
         # Position of the agent (at all time)
@@ -889,6 +890,102 @@ class ObservationParser:
 
         return sentence
 
+def sentences_generated(sentences):
+    # Creates the vectors for the chart
+    unique_sentences = []
+    unique_count = []
+
+    # Check all the sentences 
+    for sentence in sentences:
+        # Join them (to be prettier on the graph)
+        s = ' '.join(map(str,sentence))
+        # If it is already in the vector of unique sentences
+        if s in unique_sentences:
+            # Find index
+            for i in range(len(unique_sentences)):
+                if s == unique_sentences[i]:
+                    # Add 1 to the count
+                    unique_count[i] = int(unique_count[i]) +1
+        else:
+            # If it is a new sentence
+            # Ass it to the vectors
+            unique_sentences.append(s)
+            unique_count.append(1)
+
+    # Wrap the sentences (to be prettier on the graph)
+    unique_sentences = [ '\n'.join(wrap(s, 15)) for s in unique_sentences ] 
+    #Transform the vectors into arrays
+    x = np.array(unique_sentences)
+    y = np.array(unique_count)
+    
+    
+    plt.figure(figsize=(10, 9), dpi=80)
+    #plt.title("Sentences Count")
+    plt.barh(x,y,0.6)
+    plt.show()
+
+def type_generated(sentences):
+    # Creates the vectors for the chart
+    unique_types = ["Located","Object","Landmark","You","I","Not"]
+    unique_count = [0,0,0,0,0,0]
+
+    # Check all the sentences 
+    for sentence in sentences:
+        for word in sentence:
+            if word in unique_types:
+                i = unique_types.index(word)
+                unique_count[i] = int(unique_count[i]) + 1
+
+    #Transform the vectors into arrays
+    x = np.array(unique_types)
+    y = np.array(unique_count)
+    
+    
+    plt.figure(figsize=(10, 9), dpi=80)
+    #plt.title("Word Count")
+    plt.barh(x,y,0.6)
+    plt.show()
+
+def words_generated(sentences):
+    # Creates the vectors for the chart
+    unique_words = []
+    unique_count = []
+
+    # Check all the sentences 
+    for sentence in sentences:
+        for word in sentence:
+            if word in unique_words:
+            # Find index
+                for i in range(len(unique_words)):
+                    if word == unique_words[i]:
+                        # Add 1 to the count
+                        unique_count[i] = int(unique_count[i]) +1
+            else:
+                # If it is a new sentence
+                # Ass it to the vectors
+                unique_words.append(word)
+                unique_count.append(1)
+
+
+
+    #Transform the vectors into arrays
+    x = np.array(unique_words)
+    y = np.array(unique_count)
+    
+    
+    plt.figure(figsize=(10, 9), dpi=80)
+    #plt.title("Sentences Count")
+    plt.barh(x,y,0.6)
+    plt.show()
+
+def analyze(sentences):
+    # Count all the sentences generated
+    sentences_generated(sentences)
+    # Count the type of sentence generated
+    type_generated(sentences)
+    # Count words
+    words_generated(sentences)
+    
 
 def run(args):
     # Load scenario config
@@ -915,9 +1012,10 @@ def run(args):
     for agent in range(sce_conf["nb_agents"]):
         agents.append(TrackingAgent())"""
 
-    observation = ObservationParserStrat(args)
+    observation = ObservationParser(args)
     # Save all the sentences generated
-    #sentences = []
+    sentences = []
+    
     
     for ep_i in range(args.n_episodes):
         obs = env.reset(init_pos=init_pos_scenar)
@@ -929,9 +1027,9 @@ def run(args):
             next_obs, rewards, dones, infos = env.step(actions)
             print("Rewards:", rewards)
             # Get sentence
-            sentence = observation.parse_obs_strat(obs,sce_conf)
+            sentence = observation.parse_obs(obs,sce_conf)
             print(sentence)
-            #sentences.append(sentence)
+            sentences.append(sentence)
 
             time.sleep(args.step_time)
             env.render()
@@ -940,6 +1038,7 @@ def run(args):
                 break
             obs = next_obs
     
+    analyze(sentences)
     #print(sentences)
 
 if __name__ == "__main__":
@@ -949,7 +1048,7 @@ if __name__ == "__main__":
                         help="Path to the environment")
     parser.add_argument("--sce_conf_path", default="configs/1a_1o_po_rel.json", 
                         type=str, help="Path to the scenario config file")
-    parser.add_argument("--sce_init_pos", default=None, 
+    parser.add_argument("--sce_init_pos", default="init_pos/test.json", 
                         type=str, help="Path to initial positions config file")
     # Environment
     parser.add_argument("--n_episodes", default=1, type=int)

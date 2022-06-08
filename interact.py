@@ -1406,7 +1406,7 @@ def run(args):
 
     observation = ObservationParserStrat(args)
     # Save all the sentences generated
-    sentences_agent_1 = []
+    sentences = []
     
     
     

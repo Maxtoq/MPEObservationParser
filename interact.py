@@ -23,50 +23,23 @@ class KeyboardActor:
         actions[1] = np.array([0.0, 0.0])
 
         if keyboard.is_pressed('z'):
-            print('z')
             actions[0] += np.array([0.0, 0.5])
         if keyboard.is_pressed('s'):
-            print('s')
             actions[0] += np.array([0.0, -0.5])
         if keyboard.is_pressed('q'):
-            print('q')
             actions[0] += np.array([-0.5, 0])
         if keyboard.is_pressed('d'):
-            print('d')
             actions[0] += np.array([0.5, 0.0])
         if keyboard.is_pressed('up arrow'):
-            print('up')
             actions[1] += np.array([0.0, 0.5])
         if keyboard.is_pressed('down arrow'):
-            print('down')
             actions[1] += np.array([0.0, -0.5])
         if keyboard.is_pressed('left arrow'):
-            print('left')
             actions[1] += np.array([-0.5, 0])
         if keyboard.is_pressed('right arrow'):
-            print('right')
             actions[1] += np.array([0.5, 0.0])
 
         return actions
-
-"""class TrackingAgent:
-
-    directions = []
-    time = 0
-
-    def __init__(self):
-        pass
-
-    def update_direction(self, direction):
-        if self.directions == direction:
-            time = time + 1
-        else:
-            self.directions = direction
-        
-        if time == 3:
-            return True
-        else:
-            return False"""
 
 
 class ObservationParserStrat:
@@ -79,22 +52,264 @@ class ObservationParserStrat:
         # Initialization of the world map
         # To track the agent
         self.world = []
-        for line in range(8):
+        for line in range(6):
             newLine = []
-            for col in range(8):
+            for col in range(6):
                 newLine.append(0)
             self.world.append(newLine)
 
         # Initialization of the area map
         # Each 0 is an area (North, South, West, East)
         # That has not been fully discovered
-        self.area = [0,0,0,0]
+        self.area = [[0,0,0],[0,0,0],[0,0,0]]
 
         # Initialization of the area map with objects
         # Each 0 is the number of objects found in the area
-        self.area_obj = [0,0,0,0]
+        self.area_obj = [[0,0,0],[0,0,0],[0,0,0]]
+
+    def update_world_6(self, posX, posY):
+        # 0 means not discovered
+        # 1 means discovered
+
+        #Check the position of the agent
+        # To update the value of the world
         
-    def update_world(self, posX, posY):
+        # North
+        if posY >= 0.66 :
+            if posX <= -0.66:
+                self.world[0][0] = 1
+            if posX >= -0.66 and posX <= -0.33:
+                self.world[0][1] = 1
+            if posX >= -0.33 and posX <= 0:
+                self.world[0][2] = 1
+            if posX >= 0 and posX <= 0.33:
+                self.world[0][3] = 1
+            if posX >= 0.33 and posX <= 0.66:
+                self.world[0][4] = 1
+            if posX >= 0.66:
+                self.world[0][5] = 1
+        if posY >= 0.33 and posY <= 0.66 :
+            if posX <= -0.66:
+                self.world[1][0] = 1
+            if posX >= -0.66 and posX <= -0.33:
+                self.world[1][1] = 1
+            if posX >= -0.33 and posX <= 0:
+                self.world[1][2] = 1
+            if posX >= 0 and posX <= 0.33:
+                self.world[1][3] = 1
+            if posX >= 0.33 and posX <= 0.66:
+                self.world[1][4] = 1
+            if posX >= 0.66 :
+                self.world[1][5] = 1
+
+        # Center
+        if posY >= 0 and posY <= 0.33 :
+            if posX <= -0.66:
+                self.world[2][0] = 1
+            if posX >= -0.66 and posX <= -0.33:
+                self.world[2][1] = 1
+            if posX >= -0.33 and posX <= 0:
+                self.world[2][2] = 1
+            if posX >= 0 and posX <= 0.33:
+                self.world[2][3] = 1
+            if posX >= 0.33 and posX <= 0.66:
+                self.world[2][4] = 1
+            if posX >= 0.66:
+                self.world[2][5] = 1
+        if posY >= -0.33 and posY <= 0 :
+            if posX <= -0.66:
+                self.world[3][0] = 1
+            if posX >= -0.66 and posX <= -0.33:
+                self.world[3][1] = 1
+            if posX >= -0.33 and posX <= 0:
+                self.world[3][2] = 1
+            if posX >= 0 and posX <= 0.33:
+                self.world[3][3] = 1
+            if posX >= 0.33 and posX <= 0.66:
+                self.world[3][4] = 1
+            if posX >= 0.66 :
+                self.world[3][5] = 1
+
+        # South
+        if posY >= -0.66 and posY <= -0.33 :
+            if posX <= -0.66:
+                self.world[4][0] = 1
+            if posX >= -0.66 and posX <= -0.33:
+                self.world[4][1] = 1
+            if posX >= -0.33 and posX <= 0:
+                self.world[4][2] = 1
+            if posX >= 0 and posX <= 0.33:
+                self.world[4][3] = 1
+            if posX >= 0.33 and posX <= 0.66:
+                self.world[4][4] = 1
+            if posX >= 0.66:
+                self.world[4][5] = 1
+        if posY <= -0.66:
+            if posX <= -0.66:
+                self.world[5][0] = 1
+            if posX >= -0.66 and posX <= -0.33:
+                self.world[5][1] = 1
+            if posX >= -0.33 and posX <= 0:
+                self.world[5][2] = 1
+            if posX >= 0 and posX <= 0.33:
+                self.world[5][3] = 1
+            if posX >= 0.33 and posX <= 0.66:
+                self.world[5][4] = 1
+            if posX >= 0.66 :
+                self.world[5][5] = 1
+
+        for l in range(6) :   
+            print(self.world[l])
+
+    def update_area_6(self):
+        # Check the world to see if some area were fully discovered
+
+        # If North is not fully discovered
+        if self.area[0][0] != 1 or self.area[0][1] != 1 or self.area[0][2] != 1:
+            # North West 
+            if self.area[0][0] != 1:
+                # Count the number of cell discovered
+                count = 0
+                for i in range(2) :
+                    for j in range(2):
+                        if self.world[i][j] == 1 :
+                            count = count + 1
+                        else:
+                            break
+                # If all the cells were discovered
+                # Change the state of the area and generate a not sentence
+                if count == 4:
+                    if self.area[0][0] == 0:
+                        self.area[0][0] = 1
+                    return self.not_sentence_6(0,0)
+            
+            # North Center
+            if self.area[0][1] != 1:
+                count = 0
+                for i in range(2) :
+                    for j in range(2,4):
+                        if self.world[i][j] == 1 :
+                            count = count + 1
+                        else:
+                            break
+                if count == 4:
+                    if self.area[0][1] == 0:
+                        self.area[0][1] = 1
+
+            # North East
+            if self.area[0][2] != 1:
+                count = 0
+                for i in range(2) :
+                    for j in range(4,6):
+                        if self.world[i][j] == 1 :
+                            count = count + 1
+                        else:
+                            break
+                if count == 4:
+                    if self.area[0][2] == 0:
+                        self.area[0][2] = 1
+                    return self.not_sentence_6(0,2)
+
+        else:
+            print("North fully discovered")
+            return self.not_sentence_6(0,1)
+
+        # If Center not fully discovered
+        if self.area[1][0] != 1 or self.area[1][1] != 1 or self.area[1][2] != 1:
+            # Center West 
+            if self.area[1][0] != 1:
+                count = 0
+                for i in range(2,4) :
+                    for j in range(2):
+                        if self.world[i][j] == 1 :
+                            count = count + 1
+                        else:
+                            break
+                if count == 4:
+                    if self.area[1][0] == 0:
+                        self.area[1][0] = 1
+            
+            # Center Center
+            if self.area[1][1] != 1:
+                count = 0
+                for i in range(2,4) :
+                    for j in range(2,4):
+                        if self.world[i][j] == 1 :
+                            count = count + 1
+                        else:
+                            break
+                if count == 4:
+                    if self.area[1][1] == 0:
+                        self.area[1][1] = 1
+                    return self.not_sentence_6(1,1)
+
+            # Center East
+            if self.area[1][2] != 1:
+                count = 0
+                for i in range(2,4) :
+                    for j in range(4,6):
+                        if self.world[i][j] == 1 :
+                            count = count + 1
+                        else:
+                            break
+                if count == 4:
+                    if self.area[1][2] == 0:
+                        self.area[1][2] = 1
+
+        # If South is not fully discovered
+        if self.area[2][0] != 1 or self.area[2][1] != 1 or self.area[2][2] != 1:
+            # South West 
+            if self.area[2][0] != 1:
+                count = 0
+                for i in range(4,6) :
+                    for j in range(2):
+                        if self.world[i][j] == 1 :
+                            count = count + 1
+                        else:
+                            break
+                if count == 4:
+                    if self.area[2][0] == 0:
+                        self.area[2][0] = 1
+                    return self.not_sentence_6(2,0)
+            
+            # South Center
+            if self.area[2][1] != 1:
+                count = 0
+                for i in range(4,6) :
+                    for j in range(2,4):
+                        if self.world[i][j] == 1 :
+                            count = count + 1
+                        else:
+                            break
+                if count == 4:
+                    if self.area[2][1] == 0:
+                        self.area[2][1] = 1
+
+            # South East
+            if self.area[2][2] != 1:
+                count = 0
+                for i in range(4,6) :
+                    for j in range(4,6):
+                        if self.world[i][j] == 1 :
+                            count = count + 1
+                        else:
+                            break
+                if count == 4:
+                    if self.area[2][2] == 0:
+                        self.area[2][2] = 1
+                    return self.not_sentence_6(2,2)
+        else:
+            return self.not_sentence_6(2,1)
+
+        # West and East
+        if self.area[0][0] >= 1 and self.area[1][0] >= 1 and self.area[2][0] >= 1:
+            return self.not_sentence_6(1,0)
+        if self.area[0][2] >= 1 and self.area[1][2] >= 1 and self.area[2][2] >= 1:
+            return self.not_sentence_6(1,2)
+        
+
+# Update the world when it is 8 x 8
+    def update_world_8(self, posX, posY):
         
         # 0 means not discovered
         # 1 means discovered
@@ -373,30 +588,209 @@ class ObservationParserStrat:
 
     def reset_area(self, num):
 
-        self.area[num] = 0
         # If the area was North
         if num == 0:
-            for i in range(3) :
-                for j in range(8):
+            for i in range(3):
+                self.area[0][i] = 0
+                self.area_obj[0][i] = 0
+            for i in range(2) :
+                for j in range(6):
                     self.world[i][j] = 0 
 
         # If the area was South
         if num == 1:
-            for i in range(4,8) :
-                for j in range(8):
+            for i in range(3):
+                self.area[2][i] = 0
+                self.area_obj[2][i] = 0
+            for i in range(4,6) :
+                for j in range(6):
                     self.world[i][j] = 0 
 
         # If the area was West
         if num == 2:
-            for i in range(3) :
-                for j in range(8):
+            for i in range(3):
+                self.area[i][0] = 0
+                self.area_obj[i][0] = 0
+            for i in range(2) :
+                for j in range(6):
                     self.world[j][i] = 0 
 
         # If the area was East
         if num == 3:
-            for i in range(4,8) :
-                for j in range(8):
+            for i in range(3):
+                self.area[i][2] = 0
+                self.area_obj[i][2] = 0
+            for i in range(4,6) :
+                for j in range(6):
                     self.world[j][i] = 0 
+
+        # If the area was Center
+        if num == 4:
+            self.area[1][1] = 0
+            self.area_obj[1][1] = 0
+        for i in range(2,4):
+            for j in range(2,4):
+                self.world[i][j] = 0
+
+    def not_sentence_6(self, i, j):
+        print("------------- NOT SENTENCE ------------")
+        print(self.area)
+        print(self.area_obj)
+        position = []
+        n_sent = []
+        check = ""
+        obj = 0
+
+        if i == 0 :
+            position.append("North")
+            if j == 1 :
+                check="North"
+        if i == 2:
+            position.append("South")
+            if j == 1 :
+                check="South"
+        if j == 0:
+            position.append("West")
+            if i == 1 :
+                check="West"
+        if j == 2:
+            position.append("East")
+            if i == 1 :
+                check="East"
+        if i == 1 and j == 1:
+            position.append("Center")
+            check="Center"
+
+        obj = self.area_obj[i][j]
+        print("Obj area: " + str(obj))
+
+        if check == "North":
+            for x in range(3) :
+                a = self.area_obj[0][x]
+                print("A: " + str(a))
+                if a == 2 and (obj == 2 or obj == 0):
+                    obj = 2
+                elif a == 3 and (obj == 3 or obj == 0):
+                    obj = 3
+                elif a != 0 :
+                    obj = 4
+            self.reset_area(0)
+        elif check == "South":
+            for x in range(3) :
+                a = self.area_obj[2][x]
+                if a == 2 and (obj == 2 or obj == 0):
+                    obj = 2
+                elif a == 3 and (obj == 3 or obj == 0):
+                    obj = 3
+                elif a != 0 :
+                    obj = 4
+            self.reset_area(1)
+        elif check == "West":
+            for x in range(3) :
+                a = self.area_obj[x][0]
+                if a == 2 and (obj == 2 or obj == 0):
+                    obj = 2
+                elif a == 3 and (obj == 3 or obj == 0):
+                    obj = 3
+                elif a != 0 :
+                    obj = 4
+            self.reset_area(2)
+        elif check == "East":
+            for x in range(3) :
+                a = self.area_obj[x][2]
+                if a == 2 and (obj == 2 or obj == 0):
+                    obj = 2
+                elif a == 3 and (obj == 3 or obj == 0):
+                    obj = 3
+                elif a != 0 :
+                    obj = 4
+            self.reset_area(3)
+        elif check == "Center":
+            self.reset_area(4)
+
+        print("After obj: " + str(obj))
+        if obj == 0:
+            n_sent.extend(["Object","Not"])
+            n_sent.extend(position)
+            n_sent.extend(["Landmark","Not"])
+            n_sent.extend(position)
+        if obj == 2:
+            n_sent.extend(["Landmark","Not"])
+            n_sent.extend(position)
+        if obj == 3:
+            n_sent.extend(["Object","Not"])
+            n_sent.extend(position)
+        # If obj == 4 : both object are in the area
+
+
+        return n_sent                               # ---------- ADD TO SENTENCE ------------ #
+
+                
+    def update_area_obj_6(self, agent_x, agent_y, num):
+        # Num : 2 if object
+        #       3 if landmark
+        #       4 if both
+        print("OBJECT FOUND: " + str(num))
+        print(self.area)
+        print(self.area_obj)
+        # North
+        if agent_y >= 0.33:
+            if agent_x >= 0.33:
+                if self.area_obj[0][2] != 0 and self.area_obj[0][2] != num:
+                    self.area_obj[0][2] = 4
+                    print("deux")
+                else :
+                    self.area_obj[0][2] = num
+                    print("un")
+            elif agent_x <= -0.33:
+                if self.area_obj[0][0] != 0 and self.area_obj[0][0] != num:
+                    self.area_obj[0][0] = 4
+                    print("deux")
+                else :
+                    self.area_obj[0][0] = num
+                    print("un")
+            else :
+                if self.area_obj[0][1] != 0 and self.area_obj[0][1] != num:
+                    self.area_obj[0][1] = 4
+                    print("deux")
+                else :
+                    self.area_obj[0][1] = num
+                    print("un")
+        # South
+        elif agent_y <= -0.33:
+            if agent_x >= 0.33:
+                if self.area_obj[2][2] != 0 and self.area_obj[2][2] != num:
+                    self.area_obj[2][2] = 4
+                else :
+                    self.area_obj[2][2] = num
+            elif agent_x <= -0.33:
+                if self.area_obj[2][0] != 0 and self.area_obj[2][0] != num:
+                    self.area_obj[2][0] = 4
+                else :
+                    self.area_obj[2][0] = num
+            else :
+                if self.area_obj[2][1] != 0 and self.area_obj[2][1] != num:
+                    self.area_obj[2][1] = 4
+                else :
+                    self.area_obj[2][1] = num
+        
+        # Center
+        else:
+            if agent_x >= 0.33:
+                if self.area_obj[1][2] != 0 and self.area_obj[1][2] != num:
+                    self.area_obj[1][2] = 4
+                else :
+                    self.area_obj[1][2] = num
+            elif agent_x <= -0.33:
+                if self.area_obj[1][0] != 0 and self.area_obj[1][0] != num:
+                    self.area_obj[1][0] = 4
+                else :
+                    self.area_obj[1][0] = num
+            else :
+                if self.area_obj[1][1] != 0 and self.area_obj[1][1] != num:
+                    self.area_obj[1][1] = 4
+                else :
+                    self.area_obj[1][1] = num
 
 
 
@@ -437,7 +831,7 @@ class ObservationParserStrat:
         # Otherwise it == 4 and means the 2 objects are there 
         else: 
             self.reset_area(i)
-
+            pass
 
     def update_area_obj(self, agent_x, agent_y, num):
         # Num : 2 if object
@@ -466,7 +860,6 @@ class ObservationParserStrat:
             else:
                 self.area[2] = num
 
-        pass
 
     def update_direction(self, direction):
         # Check if the current direction of the agent
@@ -630,7 +1023,8 @@ class ObservationParserStrat:
             if obs[0][place] == 1 :
 
                 #We update the area_obj
-                self.update_area_obj(obs[0][0],obs[0][1],2)
+                #self.update_area_obj(obs[0][0],obs[0][1],2)
+                self.update_area_obj_6(obs[0][0],obs[0][1],2)
 
                 sentence.append("Object")
                  # North / South
@@ -683,7 +1077,8 @@ class ObservationParserStrat:
             if obs[0][place] == 1 :
 
                 #We update the area_obj
-                self.update_area_obj(obs[0][0],obs[0][1],3)
+                #self.update_area_obj(obs[0][0],obs[0][1],3)
+                self.update_area_obj_6(obs[0][0],obs[0][1],3)
 
                 sentence.append("Landmark")
                 
@@ -743,8 +1138,8 @@ class ObservationParserStrat:
 
         # Update the world variable to see what the agent
         # Has discovered (to generate not sentences)
-        self.update_world(obs[0][0],obs[0][1])
-        temp = self.update_area()
+        self.update_world_6(obs[0][0],obs[0][1])
+        temp = self.update_area_6()
         if temp != None:
             print("not none")
             sentence.extend(temp)
@@ -1008,13 +1403,11 @@ def run(args):
         init_pos_scenar = None
 
     actor = KeyboardActor(sce_conf["nb_agents"])
-    """agents = []
-    for agent in range(sce_conf["nb_agents"]):
-        agents.append(TrackingAgent())"""
 
-    observation = ObservationParser(args)
+    observation = ObservationParserStrat(args)
     # Save all the sentences generated
-    sentences = []
+    sentences_agent_1 = []
+    
     
     
     for ep_i in range(args.n_episodes):
@@ -1027,7 +1420,7 @@ def run(args):
             next_obs, rewards, dones, infos = env.step(actions)
             print("Rewards:", rewards)
             # Get sentence
-            sentence = observation.parse_obs(obs,sce_conf)
+            sentence = observation.parse_obs_strat(obs,sce_conf)
             print(sentence)
             sentences.append(sentence)
 
@@ -1048,7 +1441,7 @@ if __name__ == "__main__":
                         help="Path to the environment")
     parser.add_argument("--sce_conf_path", default="configs/1a_1o_po_rel.json", 
                         type=str, help="Path to the scenario config file")
-    parser.add_argument("--sce_init_pos", default="init_pos/test.json", 
+    parser.add_argument("--sce_init_pos", default=None, 
                         type=str, help="Path to initial positions config file")
     # Environment
     parser.add_argument("--n_episodes", default=1, type=int)

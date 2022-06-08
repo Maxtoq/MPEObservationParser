@@ -1381,6 +1381,28 @@ def analyze(sentences):
     # Count words
     words_generated(sentences)
     
+def save(sentences, observations):
+    print("save pending")
+    # Create a dictionnary out of the two variables
+    #dic = dict(zip(observations,sentences))
+    dic = {}
+    for key in observations:
+        for value in sentences:
+            key = str(key)
+            dic[key] = value
+            break
+
+    # Open file
+    file = open("Sentences_Generated.txt" , "a")
+
+    # Write into the file
+    content = repr(dic)
+    file.write(content)
+
+    file.close()
+    print("save success")
+
+    
 
 def run(args):
     # Load scenario config
@@ -1407,6 +1429,8 @@ def run(args):
     observation = ObservationParserStrat(args)
     # Save all the sentences generated
     sentences = []
+    # Save all the observations generated
+    observations = []
     
     
     
@@ -1423,6 +1447,7 @@ def run(args):
             sentence = observation.parse_obs_strat(obs,sce_conf)
             print(sentence)
             sentences.append(sentence)
+            observations.append(obs)
 
             time.sleep(args.step_time)
             env.render()
@@ -1432,6 +1457,11 @@ def run(args):
             obs = next_obs
     
     analyze(sentences)
+    print("Would you like to save the results ?")
+    print("Press A to save")
+    print("Press any key to quit")
+    if keyboard.read_key() == "a":
+        save(sentences,observations)
     #print(sentences)
 
 if __name__ == "__main__":

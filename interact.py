@@ -1057,7 +1057,7 @@ def analyze(sentences):
         # Count words
         words_generated(sentences[i])
     
-def save(sce_conf, sentences, observations):
+def save(sce_conf, sentences, observations, actions):
     print("save pending")
     # Create a dictionnary out of the two variables
     #dic = dict(zip(observations,sentences))
@@ -1076,6 +1076,7 @@ def save(sce_conf, sentences, observations):
             dic['Step ' + str(i)]['Agent_' + str(nb)]['Sentence'] = sentences[nb][i]
             # Add action of the agent
             dic['Step ' + str(i)]['Agent_' + str(nb)]['Action'] = {}
+            dic['Step ' + str(i)]['Agent_' + str(nb)]['Action'] = str(actions[i][nb])
         i += 1
         
 
@@ -1120,6 +1121,8 @@ def run(args):
     sentences = [[],[]]
     # Save all the observations generated
     observations = []
+    # Save all the actions genenrated
+    action_list = []
     
     
     
@@ -1138,6 +1141,7 @@ def run(args):
             sentences[0].append(sentence)
             sentences[1].append(observation.parse_obs_strat(obs[1],sce_conf,1))
             observations.append(obs)
+            action_list.append(actions)
 
             time.sleep(args.step_time)
             env.render()
@@ -1151,7 +1155,7 @@ def run(args):
     print("Press A to save")
     print("Press any key to quit")
     if keyboard.read_key() == "a":
-        save(sce_conf,sentences,observations)
+        save(sce_conf,sentences,observations,action_list)
     #print(sentences)
 
 if __name__ == "__main__":

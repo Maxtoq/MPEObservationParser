@@ -194,8 +194,8 @@ class ObservationParserStrat:
             if posX >= 0.66 :
                 self.world[nb][5][5] = 1
 
-        for l in range(6) :   
-            print(self.world[nb][l])
+        """for l in range(6) :   
+            print(self.world[nb][l])"""
 
     def update_area_6(self, nb):
         # Check the world to see if some area were fully discovered
@@ -389,9 +389,9 @@ class ObservationParserStrat:
                 self.world[nb][i][j] = 0
 
     def not_sentence_6(self, i, j, nb_agent):
-        print("------------- NOT SENTENCE ------------")
+        """print("------------- NOT SENTENCE ------------")
         print(self.area[nb_agent])
-        print(self.area_obj)
+        print(self.area_obj)"""
         position = []
         n_sent = []
         check = ""
@@ -418,12 +418,10 @@ class ObservationParserStrat:
             check="Center"
 
         obj = self.area_obj[nb_agent][i][j]
-        print("Obj area: " + str(obj))
 
         if check == "North":
             for x in range(3) :
                 a = self.area_obj[nb_agent][0][x]
-                print("A: " + str(a))
                 if a == 2 and (obj == 2 or obj == 0):
                     obj = 2
                 elif a == 3 and (obj == 3 or obj == 0):
@@ -464,7 +462,6 @@ class ObservationParserStrat:
         elif check == "Center":
             self.reset_area(4, nb_agent)
 
-        print("After obj: " + str(obj))
         if obj == 0:
             n_sent.extend(["Object","Not"])
             n_sent.extend(position)
@@ -485,32 +482,26 @@ class ObservationParserStrat:
         # Num : 2 if object
         #       3 if landmark
         #       4 if both
-        print("OBJECT FOUND: " + str(num))
+        """print("OBJECT FOUND: " + str(num))
         print(self.area)
-        print(self.area_obj[nb_agent])
+        print(self.area_obj[nb_agent])"""
         # North
         if agent_y >= 0.33:
             if agent_x >= 0.33:
                 if self.area_obj[nb_agent][0][2] != 0 and self.area_obj[nb_agent][0][2] != num:
                     self.area_obj[nb_agent][0][2] = 4
-                    print("deux")
                 else :
                     self.area_obj[nb_agent][0][2] = num
-                    print("un")
             elif agent_x <= -0.33:
                 if self.area_obj[nb_agent][0][0] != 0 and self.area_obj[nb_agent][0][0] != num:
                     self.area_obj[nb_agent][0][0] = 4
-                    print("deux")
                 else :
                     self.area_obj[nb_agent][0][0] = num
-                    print("un")
             else :
                 if self.area_obj[nb_agent][0][1] != 0 and self.area_obj[nb_agent][0][1] != num:
                     self.area_obj[nb_agent][0][1] = 4
-                    print("deux")
                 else :
                     self.area_obj[nb_agent][0][1] = num
-                    print("un")
         # South
         elif agent_y <= -0.33:
             if agent_x >= 0.33:
@@ -827,7 +818,6 @@ class ObservationParserStrat:
         self.update_world_6( obs[0], obs[1], nb)
         temp = self.update_area_6(nb)
         if temp != None:
-            print("not none")
             sentence.extend(temp)
 
         return sentence
@@ -1074,11 +1064,13 @@ def save(sce_conf, sentences, observations, actions):
     #dic = dict(zip(observations,sentences))
     dic = {}
     i = 0
+    # For each step (each observation)
     for key in observations:
         # Generate the step
         dic['Step ' + str(i)] = {}
         # Add the state
         dic['Step ' + str(i)]['State'] = {}
+        # For each agent
         for nb in range(sce_conf["nb_agents"]):
             # Add the observation of the agent
             dic['Step ' + str(i)]['Agent_' + str(nb)] = {}
@@ -1088,23 +1080,17 @@ def save(sce_conf, sentences, observations, actions):
             # Add action of the agent
             dic['Step ' + str(i)]['Agent_' + str(nb)]['Action'] = {}
             dic['Step ' + str(i)]['Agent_' + str(nb)]['Action'] = str(actions[i][nb])
+        # Add one to the step counter  
         i += 1
         
 
     # Open file
-    #file = open("Sentences_Generated.txt" , "w")
     with open('Sentences_Generated.json', 'w', encoding="utf-8") as f:
         json.dump(dic, f, ensure_ascii=False, indent=4)
 
-    # Write into the file
-    #content = repr(dic)
-    #file.write(content)
-
-    #file.close()
     print("save success")
 
     
-
 def run(args):
     # Load scenario config
     sce_conf = {}
@@ -1125,8 +1111,10 @@ def run(args):
     else:
         init_pos_scenar = None
 
-    # actor = KeyboardActor(sce_conf["nb_agents"])
-    actor = RandomActor(sce_conf["nb_agents"])
+    if args.actors == "manual" :
+        actor = KeyboardActor(sce_conf["nb_agents"])
+    else :
+        actor = RandomActor(sce_conf["nb_agents"])
 
     observation = ObservationParserStrat(args, sce_conf)
     # Save all the sentences generated
@@ -1136,32 +1124,39 @@ def run(args):
     # Save all the actions genenrated
     action_list = []
     
-    
+    # Test timing execution speed
+    t0 = time.time()
     
     for ep_i in range(args.n_episodes):
         obs = env.reset(init_pos=init_pos_scenar)
         for step_i in range(args.episode_length):
-            print("Step", step_i)
-            print("Observations:", obs)
+            #print("Step", step_i)
+            #print("Observations:", obs)
             # Get action
             actions = actor.get_action()
             next_obs, rewards, dones, infos = env.step(actions)
-            print("Rewards:", rewards)
+            #print("Rewards:", rewards)
             # Get sentence of agent 1
             sentence = observation.parse_obs_strat(obs[0],sce_conf,0)
-            print(sentence)
+            #print(sentence)
             sentences[0].append(sentence)
             sentences[1].append(observation.parse_obs_strat(obs[1],sce_conf,1))
             observations.append(obs)
             action_list.append(actions)
 
             time.sleep(args.step_time)
-            env.render()
+            #env.render()
 
             if dones[0]:
                 break
             obs = next_obs
     
+    t1 = time.time() - t0
+
+    print("Execution time: " + str(t1))
+    print("Execution time per episodes: " + str((t1)/args.n_episodes))
+    print("Execution time per step: " + str((t1)/(args.n_episodes * args.episode_length)))
+
     analyze(sentences)
     print("Would you like to save the results ?")
     print("Press A to save")
@@ -1187,6 +1182,8 @@ if __name__ == "__main__":
     parser.add_argument("--step_time", default=0.1, type=float)
     # Language
     parser.add_argument("--chance_not_sent", default=0.1, type=float)
+    # Action
+    parser.add_argument("--actors", default="random")
 
     args = parser.parse_args()
     run(args)

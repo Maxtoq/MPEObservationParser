@@ -41,6 +41,17 @@ class KeyboardActor:
 
         return actions
 
+class RandomActor:
+    def __init__(self, n_agents, dim_action=2):
+        self.n_agents = n_agents
+        self.dim_action = dim_action
+
+    def get_action(self):
+        if self.dim_action == 2:
+            return np.random.uniform(-1, 1, size=(self.n_agents, self.dim_action))
+        else:
+            return None
+
 
 class ObservationParserStrat:
     
@@ -1114,7 +1125,8 @@ def run(args):
     else:
         init_pos_scenar = None
 
-    actor = KeyboardActor(sce_conf["nb_agents"])
+    # actor = KeyboardActor(sce_conf["nb_agents"])
+    actor = RandomActor(sce_conf["nb_agents"])
 
     observation = ObservationParserStrat(args, sce_conf)
     # Save all the sentences generated

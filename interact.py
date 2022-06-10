@@ -113,30 +113,30 @@ class ObservationParserStrat:
         # North
         if posY >= 0.66 :
             if posX <= -0.66:
-                self.world[nb][0][0] = 1
+                self.world[nb][0][0] = 2
             if posX >= -0.66 and posX <= -0.33:
-                self.world[nb][0][1] = 1
+                self.world[nb][0][1] = 2
             if posX >= -0.33 and posX <= 0:
                 self.world[nb][0][2] = 1
             if posX >= 0 and posX <= 0.33:
                 self.world[nb][0][3] = 1
             if posX >= 0.33 and posX <= 0.66:
-                self.world[nb][0][4] = 1
+                self.world[nb][0][4] = 2
             if posX >= 0.66:
-                self.world[nb][0][5] = 1
+                self.world[nb][0][5] = 2
         if posY >= 0.33 and posY <= 0.66 :
             if posX <= -0.66:
-                self.world[nb][1][0] = 1
+                self.world[nb][1][0] = 2
             if posX >= -0.66 and posX <= -0.33:
-                self.world[nb][1][1] = 1
+                self.world[nb][1][1] = 2
             if posX >= -0.33 and posX <= 0:
                 self.world[nb][1][2] = 1
             if posX >= 0 and posX <= 0.33:
                 self.world[nb][1][3] = 1
             if posX >= 0.33 and posX <= 0.66:
-                self.world[nb][1][4] = 1
+                self.world[nb][1][4] = 2
             if posX >= 0.66 :
-                self.world[nb][1][5] = 1
+                self.world[nb][1][5] = 2
 
         # Center
         if posY >= 0 and posY <= 0.33 :
@@ -169,33 +169,33 @@ class ObservationParserStrat:
         # South
         if posY >= -0.66 and posY <= -0.33 :
             if posX <= -0.66:
-                self.world[nb][4][0] = 1
+                self.world[nb][4][0] = 2
             if posX >= -0.66 and posX <= -0.33:
-                self.world[nb][4][1] = 1
+                self.world[nb][4][1] = 2
             if posX >= -0.33 and posX <= 0:
                 self.world[nb][4][2] = 1
             if posX >= 0 and posX <= 0.33:
                 self.world[nb][4][3] = 1
             if posX >= 0.33 and posX <= 0.66:
-                self.world[nb][4][4] = 1
+                self.world[nb][4][4] = 2
             if posX >= 0.66:
-                self.world[nb][4][5] = 1
+                self.world[nb][4][5] = 2
         if posY <= -0.66:
             if posX <= -0.66:
-                self.world[nb][5][0] = 1
+                self.world[nb][5][0] = 2
             if posX >= -0.66 and posX <= -0.33:
-                self.world[nb][5][1] = 1
+                self.world[nb][5][1] = 2
             if posX >= -0.33 and posX <= 0:
                 self.world[nb][5][2] = 1
             if posX >= 0 and posX <= 0.33:
                 self.world[nb][5][3] = 1
             if posX >= 0.33 and posX <= 0.66:
-                self.world[nb][5][4] = 1
+                self.world[nb][5][4] = 2
             if posX >= 0.66 :
-                self.world[nb][5][5] = 1
+                self.world[nb][5][5] = 2
 
-        """for l in range(6) :   
-            print(self.world[nb][l])"""
+        for l in range(6) :   
+            print(self.world[nb][l])
 
     def update_area_6(self, nb):
         # Check the world to see if some area were fully discovered
@@ -208,7 +208,7 @@ class ObservationParserStrat:
                 count = 0
                 for i in range(2) :
                     for j in range(2):
-                        if self.world[nb][i][j] == 1 :
+                        if self.world[nb][i][j] >= 1 :
                             count = count + 1
                         else:
                             break
@@ -224,7 +224,7 @@ class ObservationParserStrat:
                 count = 0
                 for i in range(2) :
                     for j in range(2,4):
-                        if self.world[nb][i][j] == 1 :
+                        if self.world[nb][i][j] >= 1 :
                             count = count + 1
                         else:
                             break
@@ -237,7 +237,7 @@ class ObservationParserStrat:
                 count = 0
                 for i in range(2) :
                     for j in range(4,6):
-                        if self.world[nb][i][j] == 1 :
+                        if self.world[nb][i][j] >= 1 :
                             count = count + 1
                         else:
                             break
@@ -256,7 +256,7 @@ class ObservationParserStrat:
                 count = 0
                 for i in range(2,4) :
                     for j in range(2):
-                        if self.world[nb][i][j] == 1 :
+                        if self.world[nb][i][j] >= 1 :
                             count = count + 1
                         else:
                             break
@@ -269,7 +269,7 @@ class ObservationParserStrat:
                 count = 0
                 for i in range(2,4) :
                     for j in range(2,4):
-                        if self.world[nb][i][j] == 1 :
+                        if self.world[nb][i][j] >= 1 :
                             count = count + 1
                         else:
                             break
@@ -283,7 +283,7 @@ class ObservationParserStrat:
                 count = 0
                 for i in range(2,4) :
                     for j in range(4,6):
-                        if self.world[nb][i][j] == 1 :
+                        if self.world[nb][i][j] >= 1 :
                             count = count + 1
                         else:
                             break
@@ -298,7 +298,7 @@ class ObservationParserStrat:
                 count = 0
                 for i in range(4,6) :
                     for j in range(2):
-                        if self.world[nb][i][j] == 1 :
+                        if self.world[nb][i][j] >= 1 :
                             count = count + 1
                         else:
                             break
@@ -312,7 +312,7 @@ class ObservationParserStrat:
                 count = 0
                 for i in range(4,6) :
                     for j in range(2,4):
-                        if self.world[nb][i][j] == 1 :
+                        if self.world[nb][i][j] >= 1 :
                             count = count + 1
                         else:
                             break
@@ -325,7 +325,7 @@ class ObservationParserStrat:
                 count = 0
                 for i in range(4,6) :
                     for j in range(4,6):
-                        if self.world[nb][i][j] == 1 :
+                        if self.world[nb][i][j] >= 1 :
                             count = count + 1
                         else:
                             break
@@ -348,50 +348,65 @@ class ObservationParserStrat:
         if num == 0:
             for i in range(3):
                 self.area[nb][0][i] = 0
-                self.area_obj[nb][0][i] = 0
+                if self.area_obj[nb][0][i] >= 4:
+                    self.area_obj[nb][0][i] = self.area_obj[nb][0][i]//2
+                else:
+                    self.area_obj[nb][0][i] = 0
             for i in range(2) :
                 for j in range(6):
-                    self.world[nb][i][j] = 0 
+                    self.world[nb][i][j] -= 1 
 
         # If the area was South
         if num == 1:
             for i in range(3):
                 self.area[nb][2][i] = 0
+            if self.area_obj[nb][2][i] >= 4:
+                self.area_obj[nb][2][i] = self.area_obj[nb][2][i]//2
+            else:
                 self.area_obj[nb][2][i] = 0
             for i in range(4,6) :
                 for j in range(6):
-                    self.world[nb][i][j] = 0 
+                    self.world[nb][i][j] -= 1 
 
         # If the area was West
         if num == 2:
             for i in range(3):
                 self.area[nb][i][0] = 0
-                self.area_obj[nb][i][0] = 0
+                if self.area_obj[nb][i][0] >= 4:
+                    self.area_obj[nb][i][0] = self.area_obj[nb][i][0]//2
+                else:
+                    self.area_obj[nb][i][0] = 0
             for i in range(2) :
                 for j in range(6):
-                    self.world[nb][j][i] = 0 
+                    self.world[nb][j][i] -= 1 
 
         # If the area was East
         if num == 3:
             for i in range(3):
                 self.area[nb][i][2] = 0
-                self.area_obj[nb][i][2] = 0
+                if self.area_obj[nb][i][2] >=4:
+                    self.area_obj[nb][i][2] = self.area_obj[nb][i][2]//2
+                else:
+                    self.area_obj[nb][i][2] = 0
             for i in range(4,6) :
                 for j in range(6):
-                    self.world[nb][j][i] = 0 
+                    self.world[nb][j][i] -= 1 
 
         # If the area was Center
         if num == 4:
             self.area[nb][1][1] = 0
-            self.area_obj[nb][1][1] = 0
-        for i in range(2,4):
-            for j in range(2,4):
-                self.world[nb][i][j] = 0
+            if self.area_obj[nb][1][1] >= 4:
+                self.area_obj[nb][1][1] = self.area_obj[nb][1][1]//2
+            else:
+                self.area_obj[nb][1][1] = 0
+            for i in range(2,4):
+                for j in range(2,4):
+                    self.world[nb][i][j] -= 1
 
     def not_sentence_6(self, i, j, nb_agent):
-        """print("------------- NOT SENTENCE ------------")
+        print("------------- NOT SENTENCE ------------")
         print(self.area[nb_agent])
-        print(self.area_obj)"""
+        print(self.area_obj)
         position = []
         n_sent = []
         check = ""
@@ -422,9 +437,9 @@ class ObservationParserStrat:
         if check == "North":
             for x in range(3) :
                 a = self.area_obj[nb_agent][0][x]
-                if a == 2 and (obj == 2 or obj == 0):
+                if (a == 2 or a == 4) and (obj == 2 or obj == 4 or obj == 0):
                     obj = 2
-                elif a == 3 and (obj == 3 or obj == 0):
+                elif (a == 3 or a ==6) and (obj == 3 or obj == 6 or obj == 0):
                     obj = 3
                 elif a != 0 :
                     obj = 4
@@ -432,9 +447,9 @@ class ObservationParserStrat:
         elif check == "South":
             for x in range(3) :
                 a = self.area_obj[nb_agent][2][x]
-                if a == 2 and (obj == 2 or obj == 0):
+                if (a == 2 or a == 4) and (obj == 2 or obj == 4 or obj == 0):
                     obj = 2
-                elif a == 3 and (obj == 3 or obj == 0):
+                elif (a == 3 or a ==6) and (obj == 3 or obj == 6 or obj == 0):
                     obj = 3
                 elif a != 0 :
                     obj = 4
@@ -442,9 +457,9 @@ class ObservationParserStrat:
         elif check == "West":
             for x in range(3) :
                 a = self.area_obj[nb_agent][x][0]
-                if a == 2 and (obj == 2 or obj == 0):
+                if (a == 2 or a == 4) and (obj == 2 or obj == 4 or obj == 0):
                     obj = 2
-                elif a == 3 and (obj == 3 or obj == 0):
+                elif (a == 3 or a ==6) and (obj == 3 or obj == 6 or obj == 0):
                     obj = 3
                 elif a != 0 :
                     obj = 4
@@ -452,9 +467,9 @@ class ObservationParserStrat:
         elif check == "East":
             for x in range(3) :
                 a = self.area_obj[nb_agent][x][2]
-                if a == 2 and (obj == 2 or obj == 0):
+                if (a == 2 or a == 4) and (obj == 2 or obj == 4 or obj == 0):
                     obj = 2
-                elif a == 3 and (obj == 3 or obj == 0):
+                elif (a == 3 or a ==6) and (obj == 3 or obj == 6 or obj == 0):
                     obj = 3
                 elif a != 0 :
                     obj = 4
@@ -476,7 +491,7 @@ class ObservationParserStrat:
         # If obj == 4 : both object are in the area
 
 
-        return n_sent                               # ---------- ADD TO SENTENCE ------------ #
+        return n_sent 
             
     def update_area_obj_6(self, agent_x, agent_y, num, nb_agent):
         # Num : 2 if object
@@ -488,53 +503,53 @@ class ObservationParserStrat:
         # North
         if agent_y >= 0.33:
             if agent_x >= 0.33:
-                if self.area_obj[nb_agent][0][2] != 0 and self.area_obj[nb_agent][0][2] != num:
-                    self.area_obj[nb_agent][0][2] = 4
+                if self.area_obj[nb_agent][0][2] != 0 and self.area_obj[nb_agent][0][2] != num and self.area_obj[nb_agent][0][2] != num*2:
+                    self.area_obj[nb_agent][0][2] = 5
                 else :
-                    self.area_obj[nb_agent][0][2] = num
+                    self.area_obj[nb_agent][0][2] = num*2
             elif agent_x <= -0.33:
-                if self.area_obj[nb_agent][0][0] != 0 and self.area_obj[nb_agent][0][0] != num:
-                    self.area_obj[nb_agent][0][0] = 4
+                if self.area_obj[nb_agent][0][0] != 0 and self.area_obj[nb_agent][0][0] != num and self.area_obj[nb_agent][0][0] != num*2:
+                    self.area_obj[nb_agent][0][0] = 5
                 else :
-                    self.area_obj[nb_agent][0][0] = num
+                    self.area_obj[nb_agent][0][0] = num*2
             else :
-                if self.area_obj[nb_agent][0][1] != 0 and self.area_obj[nb_agent][0][1] != num:
-                    self.area_obj[nb_agent][0][1] = 4
+                if self.area_obj[nb_agent][0][1] != 0 and self.area_obj[nb_agent][0][1] != num and self.area_obj[nb_agent][0][1] != num*2:
+                    self.area_obj[nb_agent][0][1] = 5
                 else :
                     self.area_obj[nb_agent][0][1] = num
         # South
         elif agent_y <= -0.33:
             if agent_x >= 0.33:
-                if self.area_obj[nb_agent][2][2] != 0 and self.area_obj[nb_agent][2][2] != num:
-                    self.area_obj[nb_agent][2][2] = 4
+                if self.area_obj[nb_agent][2][2] != 0 and self.area_obj[nb_agent][2][2] != num and self.area_obj[nb_agent][2][2] != num*2:
+                    self.area_obj[nb_agent][2][2] = 5
                 else :
-                    self.area_obj[nb_agent][2][2] = num
+                    self.area_obj[nb_agent][2][2] = num*2
             elif agent_x <= -0.33:
-                if self.area_obj[nb_agent][2][0] != 0 and self.area_obj[nb_agent][2][0] != num:
-                    self.area_obj[nb_agent][2][0] = 4
+                if self.area_obj[nb_agent][2][0] != 0 and self.area_obj[nb_agent][2][0] != num and self.area_obj[nb_agent][2][0] != num*2:
+                    self.area_obj[nb_agent][2][0] = 5
                 else :
-                    self.area_obj[nb_agent][2][0] = num
+                    self.area_obj[nb_agent][2][0] = num*2
             else :
-                if self.area_obj[nb_agent][2][1] != 0 and self.area_obj[nb_agent][2][1] != num:
-                    self.area_obj[nb_agent][2][1] = 4
+                if self.area_obj[nb_agent][2][1] != 0 and self.area_obj[nb_agent][2][1] != num and self.area_obj[nb_agent][2][1] != num*2:
+                    self.area_obj[nb_agent][2][1] = 5
                 else :
                     self.area_obj[nb_agent][2][1] = num
         
         # Center
         else:
             if agent_x >= 0.33:
-                if self.area_obj[nb_agent][1][2] != 0 and self.area_obj[nb_agent][1][2] != num:
-                    self.area_obj[nb_agent][1][2] = 4
+                if self.area_obj[nb_agent][1][2] != 0 and self.area_obj[nb_agent][1][2] != num and self.area_obj[nb_agent][1][2] != num*2:
+                    self.area_obj[nb_agent][1][2] = 5
                 else :
                     self.area_obj[nb_agent][1][2] = num
             elif agent_x <= -0.33:
-                if self.area_obj[nb_agent][1][0] != 0 and self.area_obj[nb_agent][1][0] != num:
-                    self.area_obj[nb_agent][1][0] = 4
+                if self.area_obj[nb_agent][1][0] != 0 and self.area_obj[nb_agent][1][0] != num and self.area_obj[nb_agent][1][0] != num*2:
+                    self.area_obj[nb_agent][1][0] = 5
                 else :
                     self.area_obj[nb_agent][1][0] = num
             else :
-                if self.area_obj[nb_agent][1][1] != 0 and self.area_obj[nb_agent][1][1] != num:
-                    self.area_obj[nb_agent][1][1] = 4
+                if self.area_obj[nb_agent][1][1] != 0 and self.area_obj[nb_agent][1][1] != num and self.area_obj[nb_agent][1][1] != num*2:
+                    self.area_obj[nb_agent][1][1] = 5
                 else :
                     self.area_obj[nb_agent][1][1] = num
 
@@ -565,7 +580,6 @@ class ObservationParserStrat:
         
         # Direction of the agent
         direction = []
-
 
         # Position of the agent (at all time)
         sentence.append("Located")
@@ -1037,12 +1051,9 @@ def words_generated(sentences):
                 unique_words.append(word)
                 unique_count.append(1)
 
-
-
     #Transform the vectors into arrays
     x = np.array(unique_words)
     y = np.array(unique_count)
-    
     
     plt.figure(figsize=(10, 9), dpi=80)
     #plt.title("Sentences Count")
@@ -1130,22 +1141,22 @@ def run(args):
     for ep_i in range(args.n_episodes):
         obs = env.reset(init_pos=init_pos_scenar)
         for step_i in range(args.episode_length):
-            #print("Step", step_i)
-            #print("Observations:", obs)
+            print("Step", step_i)
+            print("Observations:", obs)
             # Get action
             actions = actor.get_action()
             next_obs, rewards, dones, infos = env.step(actions)
-            #print("Rewards:", rewards)
+            print("Rewards:", rewards)
             # Get sentence of agent 1
             sentence = observation.parse_obs_strat(obs[0],sce_conf,0)
-            #print(sentence)
+            print(sentence)
             sentences[0].append(sentence)
             sentences[1].append(observation.parse_obs_strat(obs[1],sce_conf,1))
             observations.append(obs)
             action_list.append(actions)
 
             time.sleep(args.step_time)
-            #env.render()
+            env.render()
 
             if dones[0]:
                 break

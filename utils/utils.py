@@ -1,9 +1,10 @@
-
-
+from utils.make_env import make_env
+from utils.actors import RandomActor
+from utils.parsers import ObservationParser, ObservationParserStrat
+import time
 import json
 
 
-    
 def save(sce_conf, sentences, observations, actions):
     print("save pending")
     # Create a dictionnary out of the two variables
@@ -35,3 +36,50 @@ def save(sce_conf, sentences, observations, actions):
         json.dump(dic, f, ensure_ascii=False, indent=4)
 
     print("save success")
+
+def execution_time(args):
+
+    # Load scenario config
+    sce_conf = {}
+    if args.sce_conf_path is not None:
+        with open(args.sce_conf_path) as cf:
+            sce_conf = json.load(cf)
+
+    # Create environment
+    env = make_env(
+        args.env_path, 
+        discrete_action=args.discrete_action, 
+        sce_conf=sce_conf) 
+
+    # Load initial positions if given
+    if args.sce_init_pos is not None:
+        with open(args.sce_init_pos, 'r') as f:
+            init_pos_scenar = json.load(f)
+    else:
+        init_pos_scenar = None
+
+
+    actor = RandomActor(sce_conf["nb_agents"])
+    observation = ObservationParserStrat(args, sce_conf)
+
+    # Test timing execution speed
+    t0 = time.time()
+    
+    for ep_i in range(args.n_episodes):
+        obs = env.reset(init_pos=init_pos_scenar)
+        for step_i in range(args.episode_length):
+            # Get action
+            actions = actor.get_action()
+            next_obs, rewards, dones, infos = env.step(actions)
+            # Get sentence of agent 1
+            observation.parse_obs(obs[0],sce_conf,0)
+            obs = next_obs
+    
+    # Total time 
+    t1 = time.time() - t0
+
+    print("Execution time: " + str(t1))
+    print("Execution time per episodes: " + str((t1)/args.n_episodes))
+    print("Execution time per step: " + str((t1)/(args.n_episodes * args.episode_length)))
+
+

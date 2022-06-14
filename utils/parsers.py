@@ -2,6 +2,7 @@ import random
 from math import sqrt
 
 from abc import ABC, abstractmethod
+from re import S
 
 
 class Parser(ABC):
@@ -63,15 +64,69 @@ class ObservationParserStrat(Parser):
                 newAgent.append(newLine)
             self.area_obj.append(newAgent)
 
-    def update_world(self, posX, posY, nb_agent):
+    def update_world_section(self, nb_agent, num_array, posX, corner):
         # 0 means not discovered
         # 1 means discovered
         # 2 means discovered in corners
 
+        if corner == True:
+            # In a corner so = 2 (for the two possible areas)
+            if posX <= -0.66:
+                self.world[nb_agent][num_array][0] = 2
+            if posX >= -0.66 and posX <= -0.33:
+                self.world[nb_agent][num_array][1] = 2
+            if posX >= -0.33 and posX <= 0:
+                self.world[nb_agent][num_array][2] = 1
+            if posX >= 0 and posX <= 0.33:
+                self.world[nb_agent][num_array][3] = 1
+            if posX >= 0.33 and posX <= 0.66:
+                self.world[nb_agent][num_array][4] = 2
+            if posX >= 0.66:
+                self.world[nb_agent][num_array][5] = 2
+        else:
+            if posX <= -0.66:
+                self.world[nb_agent][num_array][0] = 1
+            if posX >= -0.66 and posX <= -0.33:
+                self.world[nb_agent][num_array][1] = 1
+            if posX >= -0.33 and posX <= 0:
+                self.world[nb_agent][num_array][2] = 1
+            if posX >= 0 and posX <= 0.33:
+                self.world[nb_agent][num_array][3] = 1
+            if posX >= 0.33 and posX <= 0.66:
+                self.world[nb_agent][num_array][4] = 1
+            if posX >= 0.66:
+                self.world[nb_agent][num_array][5] = 1
+
+    def update_world(self, posX, posY, nb_agent):
         #Check the position of the agent
         # To update the value of the world
         
         # North
+        # Can be in a corner
+        if posY >= 0.66 :
+            self.update_world_section(nb_agent,0,posX,corner = True)
+        if posY >= 0.33 and posY <= 0.66 :
+            self.update_world_section(nb_agent,1,posX,corner = True)
+
+        # Center
+        if posY >= 0 and posY <= 0.33 :
+            self.update_world_section(nb_agent,2,posX,corner = False)
+        if posY >= -0.33 and posY <= 0 :
+            self.update_world_section(nb_agent,3,posX,corner = False)
+
+        # South 
+        # Can be in a corner
+        if posY >= -0.66 and posY <= -0.33 :
+            self.update_world_section(nb_agent,4,posX,corner = True)
+        if posY <= -0.66:
+            self.update_world_section(nb_agent,5,posX,corner = True)
+
+        # To see what the agent saw
+        for l in range(6) :   
+            print(self.world[nb_agent][l])
+
+
+        """# North
         if posY >= 0.66 :
             if posX <= -0.66:
                 # In a corner so = 2 (for the two possible areas)
@@ -158,68 +213,74 @@ class ObservationParserStrat(Parser):
                 self.world[nb_agent][5][5] = 2
 
         # To see what the agent saw
-        """for l in range(6) :   
+        for l in range(6) :   
             print(self.world[nb_agent][l])"""
+
+    def count_discovered(self, nb_agent, world_array_posx, world_array_posy):
+        max_count = 0
+        count = 0
+
+        # Count the number of cell discovered
+        for i in range(world_array_posx[0], world_array_posx[1]):
+            for j in range(world_array_posy[0], world_array_posy[1]):
+                max_count += 1
+                # if == 1 or == 2, the agent saw it
+                if self.world[nb_agent][i][j] >= 1 :
+                    count += 1
+                else:
+                    break
+        
+        # Returns True or False depending on 
+        # If the agent saw it entirely
+        if count == max_count:
+            return True
+        else:
+            return False
+
+    def count_discovered_corner(self, nb_agent, world_array_posx, world_array_posy):
+        max_count = 0
+        count = 0
+
+        # Count the number of cell discovered (corner)
+        for i in range(world_array_posx[0], world_array_posx[1]):
+            for j in range(world_array_posy[0], world_array_posy[1]):
+                max_count += 1
+                # if == 2, the agent saw the corner
+                if self.world[nb_agent][i][j] > 1 :
+                    count += 1
+                else:
+                    break
+        
+        # Returns True or False depending on 
+        # If the agent saw it entirely
+        if count == max_count:
+            return True
+        else:
+            return False
 
     def update_area(self, nb_agent):
         # Check the world to see if some area were fully discovered
-        #print(self.area[nb_agent])
+        print(self.area[nb_agent])
         # If North is not fully discovered
         if (self.area[nb_agent][0][0] < 1 or self.area[nb_agent][0][1] < 1 or 
         self.area[nb_agent][0][2] < 1):
             # North West 
-            if self.area[nb_agent][0][0] < 1 :
-                # Count the number of cell discovered
-                count = 0
-                for i in range(2) :
-                    for j in range(2):
-                        # if == 1 or == 2, the agent saw it
-                        if self.world[nb_agent][i][j] >= 1 :
-                            count = count + 1
-                        else:
-                            break
-                # If all the cells were discovered
-                # Change the state of the area and generate a not sentence
-                if count == 4:
-                    if self.area[nb_agent][0][0] == 0:
+            if self.area[nb_agent][0][0] < 2 :
+                if self.count_discovered_corner(nb_agent,[0,2],[0,2]):
                         self.area[nb_agent][0][0] = 2
-                    # Generate a not sentence
-                    return self.not_sentence(0,0, nb_agent)
-            
+                        # Generate a not sentence
+                        return self.not_sentence(0,0, nb_agent)
             # North Center
             if self.area[nb_agent][0][1] != 1:
-                count = 0
-                for i in range(2) :
-                    for j in range(2,4):
-                        # if == 1 or == 2, the agent saw it
-                        if self.world[nb_agent][i][j] >= 1 :
-                            count = count + 1
-                        else:
-                            break
-                # If all the cells were discovered
-                # Change the state of the area and generate a not sentence
-                if count == 4:
+                if self.count_discovered(nb_agent,[0,2],[2,4]):
                     if self.area[nb_agent][0][1] == 0:
                         self.area[nb_agent][0][1] = 1
-
             # North East
-            if self.area[nb_agent][0][2] < 1:
-                count = 0
-                for i in range(2) :
-                    for j in range(4,6):
-                        # if == 1 or == 2, the agent saw it
-                        if self.world[nb_agent][i][j] >= 1 :
-                            count = count + 1
-                        else:
-                            break
-                # If all the cells were discovered
-                # Change the state of the area and generate a not sentence
-                if count == 4:
-                    if self.area[nb_agent][0][2] == 0:
+            if self.area[nb_agent][0][2] < 2:
+                if self.count_discovered_corner(nb_agent,[0,2],[4,6]):
                         self.area[nb_agent][0][2] = 2
-                    # Generate a not sentence
-                    return self.not_sentence(0,2, nb_agent)
-
+                        # Generate a not sentence
+                        return self.not_sentence(0,2, nb_agent)
         else:
             return self.not_sentence(0,1, nb_agent)
 
@@ -228,41 +289,18 @@ class ObservationParserStrat(Parser):
         self.area[nb_agent][1][2] != 1):
             # Center West 
             if self.area[nb_agent][1][0] != 1:
-                count = 0
-                for i in range(2,4) :
-                    for j in range(2):
-                        if self.world[nb_agent][i][j] >= 1 :
-                            count = count + 1
-                        else:
-                            break
-                if count == 4:
+                if self.count_discovered(nb_agent,[2,4],[0,2]):
                     if self.area[nb_agent][1][0] == 0:
                         self.area[nb_agent][1][0] = 1
-            
             # Center Center
             if self.area[nb_agent][1][1] != 1:
-                count = 0
-                for i in range(2,4) :
-                    for j in range(2,4):
-                        if self.world[nb_agent][i][j] >= 1 :
-                            count = count + 1
-                        else:
-                            break
-                if count == 4:
+                if self.count_discovered(nb_agent,[2,4],[2,4]):
                     if self.area[nb_agent][1][1] == 0:
                         self.area[nb_agent][1][1] = 1
                     return self.not_sentence(1,1, nb_agent)
-
             # Center East
             if self.area[nb_agent][1][2] != 1:
-                count = 0
-                for i in range(2,4) :
-                    for j in range(4,6):
-                        if self.world[nb_agent][i][j] >= 1 :
-                            count = count + 1
-                        else:
-                            break
-                if count == 4:
+                if self.count_discovered(nb_agent,[2,4],[4,6]):
                     if self.area[nb_agent][1][2] == 0:
                         self.area[nb_agent][1][2] = 1
 
@@ -270,45 +308,20 @@ class ObservationParserStrat(Parser):
         if (self.area[nb_agent][2][0] < 1 or self.area[nb_agent][2][1] < 1 or 
         self.area[nb_agent][2][2] < 1):
             # South West 
-            if self.area[nb_agent][2][0] < 1:
-                count = 0
-                for i in range(4,6) :
-                    for j in range(2):
-                        if self.world[nb_agent][i][j] >= 1 :
-                            count = count + 1
-                        else:
-                            break
-                if count == 4:
-                    if self.area[nb_agent][2][0] == 0:
+            if self.area[nb_agent][2][0] < 2:
+                if self.count_discovered_corner(nb_agent,[4,6],[0,2]):
                         self.area[nb_agent][2][0] = 2
-                    return self.not_sentence(2,0, nb_agent)
-            
+                        return self.not_sentence(2,0, nb_agent)
             # South Center
             if self.area[nb_agent][2][1] != 1:
-                count = 0
-                for i in range(4,6) :
-                    for j in range(2,4):
-                        if self.world[nb_agent][i][j] >= 1 :
-                            count = count + 1
-                        else:
-                            break
-                if count == 4:
+                if self.count_discovered(nb_agent,[4,6],[2,4]):
                     if self.area[nb_agent][2][1] == 0:
                         self.area[nb_agent][2][1] = 1
-
             # South East
-            if self.area[nb_agent][2][2] < 1:
-                count = 0
-                for i in range(4,6) :
-                    for j in range(4,6):
-                        if self.world[nb_agent][i][j] >= 1 :
-                            count = count + 1
-                        else:
-                            break
-                if count == 4:
-                    if self.area[nb_agent][2][2] == 0:
+            if self.area[nb_agent][2][2] < 2:
+                if self.count_discovered_corner(nb_agent,[4,6],[4,6]):
                         self.area[nb_agent][2][2] = 2
-                    return self.not_sentence(2,2, nb_agent)
+                        return self.not_sentence(2,2, nb_agent)
         else:
             return self.not_sentence(2,1, nb_agent)
 
@@ -322,9 +335,71 @@ class ObservationParserStrat(Parser):
         self.area[nb_agent][2][2] >= 1):
             return self.not_sentence(1,2, nb_agent)
 
-    def reset_area(self, area_nb, nb_agent):
+    def reset_area(self, nb_agent, direction, area_pos):
+        # If direction is left to right (North or South)
+        if direction == 0:
+            for i in range(3):
+                # Reset the area by doing -1
+                self.area[nb_agent][area_pos][i] -= 1
+                # If the agent saw an object (and in a corner)
+                if self.area_obj[nb_agent][area_pos][i] >= 4:
+                    # Devide it by 2
+                    self.area_obj[nb_agent][area_pos][i] = \
+                        self.area_obj[nb_agent][area_pos][i]//2
+                else:
+                    # Or = 0
+                    self.area_obj[nb_agent][area_pos][i] = 0
 
-        # If the area was North
+        # If direction is up to bottom (West or East)
+        elif direction == 1:
+            for i in range(3):
+                self.area[nb_agent][i][area_pos] -= 1
+                if self.area_obj[nb_agent][i][area_pos] >= 4:
+                    self.area_obj[nb_agent][i][area_pos] = \
+                        self.area_obj[nb_agent][i][area_pos]//2
+                else:
+                    self.area_obj[nb_agent][i][area_pos] = 0
+
+    def reset_world(self, nb_agent, world_array_posx, world_array_posy):
+        # Reset the world map depending on the array position
+        for i in range(world_array_posx[0],world_array_posx[1]) :
+                for j in range(world_array_posy[0],world_array_posy[1]):
+                    self.world[nb_agent][i][j] -= 1 
+
+    def reset_areas(self, area_nb, nb_agent):
+
+        # If North
+        if area_nb == 0:
+            # Reset the area and the world map
+            # Send area values to other programs
+            self.reset_area(nb_agent,0,0)
+            self.reset_world(nb_agent,[0,2],[0,6])
+        # If South
+        if area_nb == 1:
+            self.reset_area(nb_agent,0,2)
+            self.reset_world(nb_agent,[4,6],[0,6])
+        # if West
+        if area_nb == 2:
+            self.reset_area(nb_agent,1,0)
+            self.reset_world(nb_agent,[0,6],[0,2])
+        # If East
+        if area_nb == 3:
+            self.reset_area(nb_agent,1,2)
+            self.reset_world(nb_agent,[0,6],[4,6])
+        
+        # If Center
+        if area_nb == 4:
+            # Reset the area (1,1)
+            self.area[nb_agent][1][1] -= 1
+            if self.area_obj[nb_agent][1][1] >= 4:
+                self.area_obj[nb_agent][1][1] = \
+                    self.area_obj[nb_agent][1][1]//2
+            else:
+                self.area_obj[nb_agent][1][1] = 0
+            # Reset the world
+            self.reset_world(nb_agent,[2,4],[2,4])
+
+        """# If the area was North
         if area_nb == 0:
             for i in range(3):
                 # Set the area back to 0
@@ -386,12 +461,46 @@ class ObservationParserStrat(Parser):
                 self.area_obj[nb_agent][1][1] = 0
             for i in range(2,4):
                 for j in range(2,4):
-                    self.world[nb_agent][i][j] -= 1
+                    self.world[nb_agent][i][j] -= 1"""
+
+    def check_area(self, nb_agent, direction, area_pos, obj):
+        
+        # If North or South
+        if direction == 0:
+            for x in range(3) :
+                    # obj_i represente the object found in the area
+                    obj_i = self.area_obj[nb_agent][area_pos][x]
+                    # If 2 or 4 then obj = 2
+                    if ((obj_i == 2 or obj_i == 4) and 
+                    (obj == 2 or obj == 4 or obj == 0)):
+                        obj = 2
+                    # if 3 or 6 then obj = 3
+                    elif ((obj_i == 3 or obj_i == 6) and 
+                    (obj == 3 or obj == 6 or obj == 0)):
+                        obj = 3
+                    elif obj_i != 0 :
+                        # Else, it means that two different objects
+                        # Are in the same area, obj = 4
+                        obj = 4
+        # If West or East
+        elif direction == 1:
+            for x in range(3) :
+                    obj_i = self.area_obj[nb_agent][x][area_pos]
+                    if ((obj_i == 2 or obj_i == 4) and 
+                    (obj == 2 or obj == 4 or obj == 0)):
+                        obj = 2
+                    elif ((obj_i == 3 or obj_i == 6) and 
+                    (obj == 3 or obj == 6 or obj == 0)):
+                        obj = 3
+                    elif obj_i != 0 :
+                        obj = 4
+
+        return obj
 
     def not_sentence(self, i, j, nb_agent):
-        """print("------------------------- NOT SENTENCE -------------------------")
+        print("------------------------- NOT SENTENCE -------------------------")
         print(self.area[nb_agent])
-        print(self.area_obj)"""
+        print(self.area_obj)
         # Position of the agent
         position = []
         # Part of the sentence generated
@@ -431,62 +540,22 @@ class ObservationParserStrat(Parser):
         # If the agent discovered a whole area
         # We have to check all 3 areas
         if check == "North":
-            for x in range(3) :
-                # a represente the object found in the area
-                a = self.area_obj[nb_agent][0][x]
-                # If 2 or 4 then obj = 2
-                if ((a == 2 or a == 4) and 
-                (obj == 2 or obj == 4 or obj == 0)):
-                    obj = 2
-                # if 3 or 6 then obj = 3
-                elif ((a == 3 or a == 6) and 
-                (obj == 3 or obj == 6 or obj == 0)):
-                    obj = 3
-                elif a != 0 :
-                    # Else, it means that two different objects
-                    # Are in the same area, obj = 4
-                    obj = 4
+            # Update the object value depending on the objects in the area
+            obj = self.check_area(nb_agent, 0, 0, obj)
             # Then we reset the area
-            self.reset_area(0, nb_agent)
+            self.reset_areas(0, nb_agent)
         elif check == "South":
-            for x in range(3) :
-                a = self.area_obj[nb_agent][2][x]
-                if ((a == 2 or a == 4) and 
-                (obj == 2 or obj == 4 or obj == 0)):
-                    obj = 2
-                elif ((a == 3 or a ==6) and 
-                (obj == 3 or obj == 6 or obj == 0)):
-                    obj = 3
-                elif a != 0 :
-                    obj = 4
-            self.reset_area(1, nb_agent)
+            obj = self.check_area(nb_agent, 0, 2, obj)
+            self.reset_areas(1, nb_agent)
         elif check == "West":
-            for x in range(3) :
-                a = self.area_obj[nb_agent][x][0]
-                if ((a == 2 or a == 4) and 
-                (obj == 2 or obj == 4 or obj == 0)):
-                    obj = 2
-                elif ((a == 3 or a ==6) and 
-                (obj == 3 or obj == 6 or obj == 0)):
-                    obj = 3
-                elif a != 0 :
-                    obj = 4
-            self.reset_area(2, nb_agent)
+            obj = self.check_area(nb_agent, 1, 0, obj)
+            self.reset_areas(2, nb_agent)
         elif check == "East":
-            for x in range(3) :
-                a = self.area_obj[nb_agent][x][2]
-                if ((a == 2 or a == 4) and 
-                (obj == 2 or obj == 4 or obj == 0)):
-                    obj = 2
-                elif ((a == 3 or a ==6) and 
-                (obj == 3 or obj == 6 or obj == 0)):
-                    obj = 3
-                elif a != 0 :
-                    obj = 4
-            self.reset_area(3, nb_agent)
+            obj = self.check_area(nb_agent, 1, 2, obj)
+            self.reset_areas(3, nb_agent)
         elif check == "Center":
             # Always reset the center
-            self.reset_area(4, nb_agent)
+            self.reset_areas(4, nb_agent)
 
         # Depending on the objects in the area
         # Creates the not sentence
@@ -607,6 +676,29 @@ class ObservationParserStrat(Parser):
         else:
             return False
 
+    def position_agent(self, obs):
+        sentence = []
+        # Position of the agent (at all time)
+        sentence.append("Located")
+        
+        # North / South
+        if  obs[1] >= 0.32:
+            sentence.append("North")
+        if  obs[1] < -0.32:
+            sentence.append("South")
+        
+        # West / East
+        if  obs[0] >= 0.32:
+            sentence.append("East")
+        if  obs[0] < -0.32:
+            sentence.append("West")
+        
+        # Center
+        elif len(sentence) == 1:
+            sentence.append("Center")
+
+        return sentence
+
     def parse_obs(self, obs, sce_conf, nb_agent):
         # Sentence generated
         sentence = []
@@ -618,31 +710,11 @@ class ObservationParserStrat(Parser):
         # Direction of the agent
         direction = []
 
-        # Position of the agent (at all time)
-        sentence.append("Located")
+        # Get the position of the agent
+        sentence.extend(self.position_agent(obs))
+        for i in range(1,len(sentence)):
+            position.append(sentence[i])
         
-        # North / South
-        if  obs[1] >= 0.32:
-            sentence.append("North")
-            position.append("North")
-        if  obs[1] < -0.32:
-            sentence.append("South")
-            position.append("South")
-        
-        # West / East
-        if  obs[0] >= 0.32:
-            sentence.append("East")
-            position.append("East")
-        if  obs[0] < -0.32:
-            sentence.append("West")
-            position.append("West")
-        
-        # Center
-        elif len(sentence) == 1:
-            sentence.append("Center")
-            position.append("Center")
-        
-
         # Position of the agent
         # For each agents 
         for agent in range(int(sce_conf['nb_agents'])-1):

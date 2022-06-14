@@ -699,22 +699,10 @@ class ObservationParserStrat(Parser):
 
         return sentence
 
-    def parse_obs(self, obs, sce_conf, nb_agent):
-        # Sentence generated
-        sentence = []
-        # Position of the agent
-        position = []
-        # If the action of pushing happens
-        push = False
-        
-        # Direction of the agent
-        direction = []
+    def agents_sentence(self, obs, sce_conf):
 
-        # Get the position of the agent
-        sentence.extend(self.position_agent(obs))
-        for i in range(1,len(sentence)):
-            position.append(sentence[i])
-        
+        sentence = []
+
         # Position of the agent
         # For each agents 
         for agent in range(int(sce_conf['nb_agents'])-1):
@@ -773,7 +761,7 @@ class ObservationParserStrat(Parser):
                         # If collision
                         if distance < 0.47:
                             sentence.extend(["You","Push","Object"])
-                            push = True
+                            #push = True
                             # Calculate where the object was pushed 
                             # Based on its distance from the agent
                             if y > 0.20 and y < 0.50 :
@@ -785,29 +773,12 @@ class ObservationParserStrat(Parser):
                             if x < -0.20 and x > -0.50:
                                 sentence.append("East")
                 
-                # SEARCH FOR OTHER AGENTS
-                # Is it moving but not pushing
-                """if not push:
-                    sentence.extend(["You","Search"])
-                    search = False
-                    if  obs[place+4] > 0.5:
-                        sentence.append("North")
-                        search = True
-                    if  obs[place+4] < -0.5:
-                        sentence.append("South")
-                        search = True
-                    if  obs[place+3] > 0.5:
-                        sentence.append("East")
-                        search = True
-                    if  obs[place+3] < -0.5:
-                        sentence.append("West")
-                        search = True
-                    # If the agent is not moving
-                    # Remove the beginning of the sentence
-                    if not search:
-                        sentence.pop()
-                        sentence.pop()"""
+        return sentence
 
+    def objects_sentence(self, obs, sce_conf, nb_agent):
+
+        sentence = []
+        push = False
 
         # Position of the objects
         # For each object 
@@ -824,7 +795,7 @@ class ObservationParserStrat(Parser):
 
                 #We update the area_obj
                 #self.update_area_obj( obs[0], obs[1],2)
-                self.update_area_obj( obs[0], obs[1],2,nb_agent)
+                self.update_area_obj(obs[0], obs[1],2,nb_agent)
 
                 sentence.append("Object")
                  # North / South
@@ -839,7 +810,8 @@ class ObservationParserStrat(Parser):
                 if  obs[place+1] < -0.25:
                     sentence.append("West")
 
-                # Calculate the distance of the center of the object from the agent
+                # Calculate the distance of the center 
+                # Of the object from the agent
                 distance =  obs[place+1]* obs[place+1] + \
                      obs[place+2]* obs[place+2]
                 distance = sqrt(distance)
@@ -859,8 +831,13 @@ class ObservationParserStrat(Parser):
                         sentence.append("East")
                     if  obs[place+1] < -0.20 and  obs[place+1] > -0.50:
                         sentence.append("West")
-                
-        
+
+        return sentence , push
+
+    def landmark_sentence(self, obs, sce_conf, nb_agent):
+
+        sentence = []
+
         # Position of the Landmarks
         # For each Landmark 
         for landmark in range(int(sce_conf['nb_objects'])):
@@ -909,6 +886,13 @@ class ObservationParserStrat(Parser):
                     if  obs[place+1] < 0:
                         sentence.append("West")
 
+        return sentence
+
+    def search_sentence(self, obs, nb_agent, push):
+        sentence = []
+
+        direction = []
+
         # Search
         # Set the direction vector depending on the direction of the agent 
         if  obs[3] > 0.5:
@@ -935,6 +919,33 @@ class ObservationParserStrat(Parser):
                 if  obs[2] < -0.5:
                     sentence.append("West")
 
+        return sentence
+
+    def parse_obs(self, obs, sce_conf, nb_agent):
+        # Sentence generated
+        sentence = []
+        # Position of the agent
+        position = []
+        # If the action of pushing happens
+        push = False
+
+        # Get the position of the agent
+        sentence.extend(self.position_agent(obs))
+        for i in range(1,len(sentence)):
+            position.append(sentence[i])
+        
+        # Other agents sentence
+        sentence.extend(self.agents_sentence(obs, sce_conf))
+
+        # Objects sentence
+        obj_sent , push = self.objects_sentence(obs, sce_conf, nb_agent)
+        sentence.extend(obj_sent)
+        
+        # Landmark sentence
+        sentence.extend(self.landmark_sentence(obs, sce_conf, nb_agent))
+        
+        # Search sentence
+        sentence.extend(self.search_sentence(obs, nb_agent, push))
 
         # Update the world variable to see what the agent
         # Has discovered (to generate not sentences)

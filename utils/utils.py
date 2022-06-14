@@ -26,7 +26,7 @@ def save(sce_conf, sentences, observations, actions):
             dic['Step ' + str(i)]['Agent_' + str(nb)]['Sentence'] = sentences[nb][i]
             # Add action of the agent
             dic['Step ' + str(i)]['Agent_' + str(nb)]['Action'] = {}
-            dic['Step ' + str(i)]['Agent_' + str(nb)]['Action'] = str(actions[i][nb])
+            dic['Step ' + str(i)]['Agent_' + str(nb)]['Action'] = list(actions[i][nb])
         # Add one to the step counter  
         i += 1
         

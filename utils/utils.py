@@ -1,3 +1,4 @@
+from utils.analyse import save_analyse
 from utils.make_env import make_env
 from utils.actors import RandomActor
 from utils.parsers import ObservationParser, ObservationParserStrat
@@ -29,7 +30,11 @@ def save(sce_conf, sentences, observations, actions):
             dic['Step ' + str(i)]['Agent_' + str(nb)]['Action'] = list(actions[i][nb])
         # Add one to the step counter  
         i += 1
-        
+    
+    # Save the analysis of the agents
+    analysis = save_analyse(sentences)
+    if analysis != None:
+        dic['Language analysis'] = analysis
 
     # Open file
     with open('Sentences_Generated.json', 'w', encoding="utf-8") as f:
@@ -87,7 +92,7 @@ def execution_time(args):
 
             observations.append(obs)
             action_list.append(actions)
-            
+
             obs = next_obs
     
     # Total time 

@@ -62,6 +62,13 @@ def execution_time(args):
     actor = RandomActor(sce_conf["nb_agents"])
     observation = ObservationParserStrat(args, sce_conf)
 
+    # Save all the sentences generated
+    sentences = [[],[]]
+    # Save all the observations generated
+    observations = []
+    # Save all the actions genenrated
+    action_list = []
+
     # Test timing execution speed
     t0 = time.time()
     
@@ -71,8 +78,16 @@ def execution_time(args):
             # Get action
             actions = actor.get_action()
             next_obs, rewards, dones, infos = env.step(actions)
-            # Get sentence of agent 1
-            observation.parse_obs(obs[0],sce_conf,0)
+            # Get sentence of agents
+            for agent in range(sce_conf["nb_agents"]):
+                print(agent)
+                sentence = observation.parse_obs(obs[agent],sce_conf,agent)
+                print(sentence)
+                sentences[agent].append(sentence)
+
+            observations.append(obs)
+            action_list.append(actions)
+            
             obs = next_obs
     
     # Total time 

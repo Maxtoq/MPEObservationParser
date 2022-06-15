@@ -56,11 +56,13 @@ def run(args):
             actions = actor.get_action()
             next_obs, rewards, dones, infos = env.step(actions)
             print("Rewards:", rewards)
-            # Get sentence of agent 1
-            sentence = observation.parse_obs(obs[0],sce_conf,0)
-            print(sentence)
-            sentences[0].append(sentence)
-            sentences[1].append(observation.parse_obs(obs[1],sce_conf,1))
+            # Get sentence of the agents
+            for agent in range(sce_conf["nb_agents"]):
+                print(agent)
+                sentence = observation.parse_obs(obs[agent],sce_conf,agent)
+                print(sentence)
+                sentences[agent].append(sentence)
+
             observations.append(obs)
             action_list.append(actions)
 

@@ -14,6 +14,43 @@ class Parser(ABC):
         """
         raise NotImplementedError
 
+    def position_agent(self, obs):
+        sentence = []
+        # Position of the agent (at all time)
+        sentence.append("Located")
+        
+        # North / South
+        if  obs[1] >= 0.33:
+            sentence.append("North")
+        if  obs[1] < -0.33:
+            sentence.append("South")
+        
+        # West / East
+        if  obs[0] >= 0.33:
+            sentence.append("East")
+        if  obs[0] < -0.33:
+            sentence.append("West")
+        
+        # Center
+        elif len(sentence) == 1:
+            sentence.append("Center")
+
+        return sentence
+
+    @abstractmethod
+    def objects_sentence(self, obs, sce_conf):
+        """
+        Returns a sentence generated based on the objects see or not by the agent
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def landmarks_sentence(self, obs, sce_conf):
+        """
+        Returns a sentence generated based on the landmarks see or not by the agent
+        """
+        raise NotImplementedError
+
 class ObservationParserStrat(Parser):
     
     def __init__(self, args, sce_conf):
@@ -676,29 +713,6 @@ class ObservationParserStrat(Parser):
         else:
             return False
 
-    def position_agent(self, obs):
-        sentence = []
-        # Position of the agent (at all time)
-        sentence.append("Located")
-        
-        # North / South
-        if  obs[1] >= 0.32:
-            sentence.append("North")
-        if  obs[1] < -0.32:
-            sentence.append("South")
-        
-        # West / East
-        if  obs[0] >= 0.32:
-            sentence.append("East")
-        if  obs[0] < -0.32:
-            sentence.append("West")
-        
-        # Center
-        elif len(sentence) == 1:
-            sentence.append("Center")
-
-        return sentence
-
     def agents_sentence(self, obs, sce_conf):
 
         sentence = []
@@ -834,7 +848,7 @@ class ObservationParserStrat(Parser):
 
         return sentence , push
 
-    def landmark_sentence(self, obs, sce_conf, nb_agent):
+    def landmarks_sentence(self, obs, sce_conf, nb_agent):
 
         sentence = []
 
@@ -942,7 +956,7 @@ class ObservationParserStrat(Parser):
         sentence.extend(obj_sent)
         
         # Landmark sentence
-        sentence.extend(self.landmark_sentence(obs, sce_conf, nb_agent))
+        sentence.extend(self.landmarks_sentence(obs, sce_conf, nb_agent))
         
         # Search sentence
         sentence.extend(self.search_sentence(obs, nb_agent, push))
@@ -970,42 +984,9 @@ class ObservationParser(Parser):
         else:
             return False
 
-    def parse_obs(self, obs, sce_conf):
-        # Sentence generated
+    def objects_sentence(self, obs, sce_conf, not_sentence, position):
+
         sentence = []
-        # Position of the agent
-        position = []
-
-        #Generation of a NOT sentence ?
-        not_sentence = 0
-        if random.random() <= self.args.chance_not_sent:
-            not_sentence = random.randint(1,3)
-
-
-        # Position of the agent (at all time)
-        sentence.append("Located")
-        
-        # North / South
-        if  obs[1] >= 0.32:
-            sentence.append("North")
-            position.append("North")
-        if  obs[1] < -0.32:
-            sentence.append("South")
-            position.append("South")
-        
-        # West / East
-        if  obs[0] >= 0.32:
-            sentence.append("East")
-            position.append("East")
-        if  obs[0] < -0.32:
-            sentence.append("West")
-            position.append("West")
-        
-        # Center
-        elif len(sentence) == 1:
-            sentence.append("Center")
-            position.append("Center")
-        
 
         # Position of the objects
         # For each object 
@@ -1040,7 +1021,13 @@ class ObservationParser(Parser):
                     sentence.append("East")
                 if  obs[place+1] < -0.25:
                     sentence.append("West")
-        
+
+        return sentence
+
+    def landmarks_sentence(self, obs, sce_conf, not_sentence, position):
+
+        sentence = []
+
         # Position of the Landmarks
         # For each Landmark 
         for landmark in range(int(sce_conf['nb_objects'])):
@@ -1092,5 +1079,31 @@ class ObservationParser(Parser):
                         sentence.append("East")
                     if  obs[place+1] < 0:
                         sentence.append("West")
+
+        return sentence
+
+    def parse_obs(self, obs, sce_conf):
+        # Sentence generated
+        sentence = []
+        # Position of the agent
+        position = []
+
+        #Generation of a NOT sentence ?
+        not_sentence = 0
+        if random.random() <= self.args.chance_not_sent:
+            not_sentence = random.randint(1,3)
+
+        # Get the position of the agent
+        sentence.extend(self.position_agent(obs))
+        for i in range(1,len(sentence)):
+            position.append(sentence[i])
+        
+        # Objects sentence
+        sentence.extend(self.objects_sentence(obs, sce_conf, \
+                        not_sentence, position))
+        
+        # Landmark sentence
+        sentence.extend(self.landmarks_sentence(obs, sce_conf, \
+                        not_sentence, position))
 
         return sentence

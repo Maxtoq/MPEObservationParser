@@ -5,12 +5,13 @@ from utils.parsers import ObservationParser, ObservationParserStrat
 import time
 import json
 
-
+# Save the sentences, actions and observations of the exercise as well as the analysis
 def save(sce_conf, sentences, observations, actions):
     print("save pending")
     # Create a dictionnary out of the two variables
     dic = {}
     i = 0
+
     # For each step (each observation)
     for key in observations:
         # Generate the step
@@ -18,6 +19,7 @@ def save(sce_conf, sentences, observations, actions):
         # Add the state
         dic['Step ' + str(i)]['State'] = {}
         # For each agent
+        
         for nb in range(sce_conf["nb_agents"]):
             agent_name = 'Agent_' + str(nb)
             # Add the observation of the agent
@@ -42,6 +44,7 @@ def save(sce_conf, sentences, observations, actions):
 
     print("save success")
 
+# Check the execution time of the program
 def execution_time(args):
 
     # Load scenario config
@@ -85,9 +88,9 @@ def execution_time(args):
             next_obs, rewards, dones, infos = env.step(actions)
             # Get sentence of agents
             for agent in range(sce_conf["nb_agents"]):
-                print(agent)
+                #sentence = " "
+                #sentence = observation.parse_obs(obs[agent],sce_conf)
                 sentence = observation.parse_obs(obs[agent],sce_conf,agent)
-                print(sentence)
                 sentences[agent].append(sentence)
 
             observations.append(obs)

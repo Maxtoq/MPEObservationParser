@@ -68,9 +68,9 @@ class Mapper:
         if posY <= -0.66:
             self.update_world_section(nb_agent,5,posX,corner = True)
 
-        # To see what the agent saw
+        """# To see what the agent saw
         for l in range(6) :   
-            print(self.world[nb_agent][l])
+            print(self.world[nb_agent][l])"""
 
     # Update a section of the world map
     def update_world_section(self, nb_agent, num_array, posX, corner):
@@ -239,7 +239,7 @@ class Mapper:
     # Update the area map
     def update_area(self, nb_agent):
         # Check the world to see if some area were fully discovered
-        print(self.area[nb_agent])
+        #print(self.area[nb_agent])
         # If North is not fully discovered
         if (self.area[nb_agent][0][0] < 1 or 
             self.area[nb_agent][0][1] < 1 or 

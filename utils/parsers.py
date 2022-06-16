@@ -53,6 +53,8 @@ class Parser(ABC):
 
 class ObservationParserStrat(Parser):
     
+    vocab = ['<SOS>', 'Located', 'Object', 'Landmark', 'I', 'You', 'North', 'South', 'East', 'West', 'Center', 'Not', 'Push', 'Search', '<EOS>']
+
     def __init__(self, args, sce_conf):
         self.args = args
         self.directions = []
@@ -66,9 +68,9 @@ class ObservationParserStrat(Parser):
         self.map = Mapper(args, sce_conf)
 
     def not_sentence(self, i, j, nb_agent):
-        print("------------------------- NOT SENTENCE -------------------------")
+        """print("------------------------- NOT SENTENCE -------------------------")
         print(self.map.area[nb_agent])
-        print(self.map.area_obj)
+        print(self.map.area_obj)"""
         # Position of the agent
         position = []
         # Part of the sentence generated
@@ -381,7 +383,7 @@ class ObservationParserStrat(Parser):
 
     def parse_obs(self, obs, sce_conf, nb_agent):
         # Sentence generated
-        sentence = []
+        sentence = ['<SOS>']
         # Position of the agent
         position = []
         # If the action of pushing happens
@@ -409,16 +411,20 @@ class ObservationParserStrat(Parser):
         # Has discovered (to generate not sentences)
         self.map.update_world( obs[0], obs[1], nb_agent)
         temp = self.map.update_area(nb_agent)
-        print(temp)
         if temp != None:
             not_sent = self.not_sentence(temp[0], temp[1], temp[2])
             sentence.extend(not_sent)
+
+        # End of sentence
+        sentence.extend(["<EOS>"])
 
         return sentence
 
 
 class ObservationParser(Parser):
     
+    vocab = ['<SOS>', 'Located', 'Object', 'Landmark', 'North', 'South', 'East', 'West', 'Center', 'Not', '<EOS>']
+
     def __init__(self, args):
         self.args = args
 
@@ -530,7 +536,7 @@ class ObservationParser(Parser):
 
     def parse_obs(self, obs, sce_conf):
         # Sentence generated
-        sentence = []
+        sentence = ['<SOS>']
         # Position of the agent
         position = []
 
@@ -552,4 +558,6 @@ class ObservationParser(Parser):
         sentence.extend(self.landmarks_sentence(obs, sce_conf, \
                         not_sentence, position))
 
+        # End of sentence
+        sentence.extend(["<EOS>"])
         return sentence

@@ -74,6 +74,16 @@ def run(args):
             obs = next_obs
 
                                                                         # ----------------- SOUS PROG ?? ----------------------- #
+
+    # If we didn't already delete the Start and End tokens
+    if sentences[0][0][0] == '<SOS>':
+        print('suppr')
+        for i in range(2):
+            for sentence in sentences[i]:
+                # We delete first and last character
+                sentence.pop(0)
+                sentence.pop()
+                    
     # Analysis of the sentences generated
     print("Would you like to see the analysis ?")
     print("Press A to see the analysis")

@@ -7,6 +7,7 @@ from utils.parsers import ObservationParser, ObservationParserStrat
 from utils.make_env import make_env
 from utils.actors import KeyboardActor, RandomActor
 from utils.analyse import analyze
+from utils.render_option import Render_option
 from utils.utils import save
 from utils.utils import execution_time
 
@@ -47,6 +48,8 @@ def run(args):
     # Save all the actions genenrated
     action_list = []
 
+    render_op = Render_option()
+
     for ep_i in range(args.n_episodes):
         obs = env.reset(init_pos=init_pos_scenar)
         for step_i in range(args.episode_length):
@@ -66,8 +69,13 @@ def run(args):
             observations.append(obs)
             action_list.append(actions)
 
+            # Get the render option
+            range1, range2 = render_op.modify_option()
+            print("After: " + str(range1))
+            #range1 = not range1
+
             time.sleep(args.step_time)
-            env.render()
+            env.render(range1,range2)
 
             if dones[0]:
                 break

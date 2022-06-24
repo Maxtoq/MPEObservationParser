@@ -23,14 +23,15 @@ def make_env(scenario_path, sce_conf={}, discrete_action=False):
         .action_space       :   Returns the action space for each agent
         .n                  :   Returns the number of Agents
     '''
-    from multiagent.environment import MultiAgentEnv
+    #from multiagent.environment import MultiAgentEnv
+    from utils.render_multiagent import RenderMultiAgent
 
     # load scenario from script
     scenario = imp.load_source('', scenario_path).Scenario()
     # create world
     world = scenario.make_world(**sce_conf)
     # create multiagent environment
-    env = MultiAgentEnv(world, scenario.reset_world, scenario.reward,
+    env = RenderMultiAgent(world, scenario.reset_world, scenario.reward,
                         scenario.observation, 
                         done_callback=scenario.done if hasattr(scenario, "done")
                         else None, discrete_action=discrete_action)

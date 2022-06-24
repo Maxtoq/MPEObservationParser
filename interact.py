@@ -3,6 +3,7 @@ import keyboard
 import json
 import time
 
+from utils.embedding import test
 from utils.parsers import ObservationParser, ObservationParserStrat
 from utils.make_env import make_env
 from utils.actors import KeyboardActor, RandomActor
@@ -130,4 +131,6 @@ if __name__ == "__main__":
     parser.add_argument("--actors", default="random", type=str, help="Available actors are 'random' or 'manual'")
 
     args = parser.parse_args()
+
+    test()
     run(args)

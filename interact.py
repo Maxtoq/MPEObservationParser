@@ -72,8 +72,6 @@ def run(args):
 
             # Get the render option
             range1, range2 = render_op.modify_option()
-            print("After: " + str(range1))
-            #range1 = not range1
 
             time.sleep(args.step_time)
             env.render(range1,range2)
@@ -85,13 +83,12 @@ def run(args):
                                                                         # ----------------- SOUS PROG ?? ----------------------- #
 
     # If we didn't already delete the Start and End tokens
-    if sentences[0][0][0] == '<SOS>':
-        print('suppr')
+    """if sentences[0][0][0] == '<SOS>':
         for i in range(2):
             for sentence in sentences[i]:
                 # We delete first and last character
                 sentence.pop(0)
-                sentence.pop()
+                sentence.pop()"""
                     
     # Analysis of the sentences generated
     print("Would you like to see the analysis ?")
@@ -133,4 +130,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     test()
-    run(args)
+    #run(args)

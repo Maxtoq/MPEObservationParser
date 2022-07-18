@@ -3,7 +3,7 @@ import keyboard
 import json
 import time
 
-from utils.embedding import test
+from utils.embedding.ngram import embedding
 from utils.parsers import ObservationParser, ObservationParserStrat
 from utils.make_env import make_env
 from utils.actors import KeyboardActor, RandomActor
@@ -129,5 +129,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    test()
+    sce_conf = {}
+    if args.sce_conf_path is not None:
+        with open(args.sce_conf_path) as cf:
+            sce_conf = json.load(cf)
+
+    observation = ObservationParser(args)
+    embedding(observation.vocab)
     #run(args)

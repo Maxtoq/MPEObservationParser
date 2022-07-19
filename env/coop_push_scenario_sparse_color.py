@@ -332,21 +332,13 @@ class Scenario(BaseScenario):
 
     def reward(self, agent, world):
         # Reward = -1 x squared distance between objects and corresponding landmarks
-        dists = [get_dist(obj.state.p_pos, 
-                          world.landmarks[i].state.p_pos)
-                    for i, obj in enumerate(world.objects)]
-        print("Dist: ")
-        print(dists)
         dists = []
         for obj in world.objects:
-            print(obj.num_color)
             for land in world.landmarks:
-                print("+" + str(land.num_color))
                 if obj.num_color == land.num_color:
                     dists.append(get_dist(obj.state.p_pos, 
                           land.state.p_pos))
                     break
-        print(dists)
         # rew = -sum([pow(d * 3, 2) for d in dists])
         # rew = -sum(dists)
         # rew = -sum(np.exp(dists))

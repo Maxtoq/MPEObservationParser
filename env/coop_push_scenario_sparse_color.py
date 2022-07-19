@@ -1,3 +1,4 @@
+import random
 import numpy as np
 
 from multiagent.scenario import BaseScenario
@@ -22,11 +23,67 @@ def obj_callback(agent, world):
     action.c = np.zeros((world.dim_c))
     return action
 
-class Landmark(Entity):
+class Color_Entity(Entity):
+    def __init__(self):
+        super(Color_Entity, self).__init__()
+
+        self.num_color = 0
+
+        # Get the color based on the number
+    def num_to_color(self, color):
+        match color:
+            #Black
+            case 1:
+                color = [0.3, 0.3, 0.3]
+            # Red
+            case 2:
+                color = [1, 0.22745, 0.18431]
+            # Blue
+            case 3:
+                color = [0, 0.38, 1]
+            # Green
+            case 4:
+                color = [0.2, 0.78 , 0.35]
+            # Yellow
+            case 5:
+                color = [1, 0.8 , 0]
+            # Purple
+            case 6:
+                color = [0.8, 0.21, 0.98]
+
+        return color
+
+    # Get the color based on the number
+    def color_to_num(self, color):
+        match color:
+            #Black
+            case [0.3, 0.3, 0.3]:
+                color = 1
+            # Red
+            case [1, 0.22745, 0.18431]:
+                color = 2
+            # Blue
+            case [0, 0.38, 1]:
+                color = 3
+            # Green
+            case [0.2, 0.78 , 0.35]:
+                color = 4
+            # Yellow
+            case [1, 0.8 , 0]:
+                color = 5
+            # Purple
+            case [0.8, 0.21, 0.98]:
+                color = 6
+
+        return color
+
+# properties of landmark entities
+class Landmark(Color_Entity):
      def __init__(self):
         super(Landmark, self).__init__()
 
-class Object(Entity):
+# properties of object entities
+class Object(Color_Entity):
     def __init__(self):
         super(Object, self).__init__()
         # Objects are movable
@@ -61,6 +118,7 @@ class PushWorld(World):
     def init_object(self, obj_i, min_dist=0.2, max_dist=1.5):
         # Random color for both entities
         color = np.random.uniform(0, 1, self.dim_color)
+        #color = self.pick_color()
         # Object
         self.objects[obj_i].name = 'object %d' % len(self.objects)
         self.objects[obj_i].color = color
@@ -160,18 +218,47 @@ class Scenario(BaseScenario):
             agent.color[i % 3] = 1.0
         # Objects and landmarks
         self.nb_objects = nb_objects
+        
+        # Set list of colors
+        colors = []
+        color = [1,1,1]
         for i, object in enumerate(world.objects):
-            # Random color for both entities
-            color = np.random.uniform(0, 1, world.dim_color)
+            # color = np.random.uniform(0, 1, world.dim_color)
+            # Pick a color that is not already taken
+            while True:
+                same = False
+                # Pick a color number
+                color = np.random.randint(1,7)
+        
+                for c in colors:
+                    if c == color:
+                        same = True
+
+                if same == False:
+                    break
+            colors.append(color)
+
             object.name = 'object %d' % i
-            object.color = color
+            object.num_color = color
+            object.color = object.num_to_color(color)
             object.size = OBJECT_SIZE
             object.initial_mass = OBJECT_MASS
+
+        for land in world.landmarks:
+            land.collide = False
+            land.size = LANDMARK_SIZE
+
+            # Take a random color
+            color = random.choice(colors)
+            colors.remove(color)
+
             # Corresponding Landmarks
-            world.landmarks[i].name = 'landmark %d' % i
-            world.landmarks[i].collide = False
-            world.landmarks[i].color = color
-            world.landmarks[i].size = LANDMARK_SIZE
+            for i, object in enumerate(world.objects):
+                if object.num_color == color:
+                    land.name = 'landmark %d' % i
+                    land.num_color = color
+                    land.color = land.num_to_color(color)
+        
         self.obj_lm_dist_range = obj_lm_dist_range
         # Scenario attributes
         self.obs_range = obs_range
@@ -188,6 +275,7 @@ class Scenario(BaseScenario):
         # make initial conditions
         self.reset_world(world)
         return world
+
 
     def done(self, agent, world):
         # Done if all objects are on their landmarks
@@ -247,6 +335,18 @@ class Scenario(BaseScenario):
         dists = [get_dist(obj.state.p_pos, 
                           world.landmarks[i].state.p_pos)
                     for i, obj in enumerate(world.objects)]
+        print("Dist: ")
+        print(dists)
+        dists = []
+        for obj in world.objects:
+            print(obj.num_color)
+            for land in world.landmarks:
+                print("+" + str(land.num_color))
+                if obj.num_color == land.num_color:
+                    dists.append(get_dist(obj.state.p_pos, 
+                          land.state.p_pos))
+                    break
+        print(dists)
         # rew = -sum([pow(d * 3, 2) for d in dists])
         # rew = -sum(dists)
         # rew = -sum(np.exp(dists))
@@ -291,7 +391,7 @@ class Scenario(BaseScenario):
         # => Full observation dim = 2 + 2 + 5 x (nb_agents_objects - 1) + 3 x (nb_landmarks)
         # All distances are divided by max_distance to be in [0, 1]
         entity_obs = []
-        for entity in world.agents + world.objects:
+        for entity in world.agents:
             if entity is agent: continue
             if get_dist(agent.state.p_pos, entity.state.p_pos) <= self.obs_range:
                 # Pos: relative normalised
@@ -317,6 +417,32 @@ class Scenario(BaseScenario):
                     entity_obs.append(np.array([0.0, 1.0, 1.0, 0.0, 0.0]))
                 else:
                     entity_obs.append(np.zeros(4))
+        for entity in world.objects:
+            if get_dist(agent.state.p_pos, entity.state.p_pos) <= self.obs_range:
+                # Pos: relative normalised
+                #entity_obs.append(np.concatenate((
+                #    [1.0], (entity.state.p_pos - agent.state.p_pos) / self.obs_range, entity.state.p_vel
+                #)))
+                # Pos: relative
+                if self.relative_coord:
+                    entity_obs.append(np.concatenate((
+                        [1.0], # Bit saying entity is observed
+                        (entity.state.p_pos - agent.state.p_pos) / self.obs_range, # Relative position normailised into [0, 1]
+                        entity.state.p_vel, # Velocity
+                        [entity.num_color]
+                        # (entity.state.p_pos - agent.state.p_pos), entity.state.p_vel
+                    )))
+                # Pos: absolute
+                else:
+                    entity_obs.append(np.concatenate((
+                        # [1.0], entity.state.p_pos, entity.state.p_vel
+                        entity.state.p_pos, entity.state.p_vel, [entity.num_color]
+                    )))
+            else:
+                if self.relative_coord:
+                    entity_obs.append(np.array([0.0, 1.0, 1.0, 0.0, 0.0, 0]))
+                else:
+                    entity_obs.append(np.zeros(5))
         for entity in world.landmarks:
             if get_dist(agent.state.p_pos, entity.state.p_pos) <= self.obs_range:
                 # Pos: relative normalised
@@ -328,6 +454,7 @@ class Scenario(BaseScenario):
                     entity_obs.append(np.concatenate((
                         [1.0], 
                         (entity.state.p_pos - agent.state.p_pos) / self.obs_range, # Relative position normailised into [0, 1]
+                        [entity.num_color]
                     )))
                     # entity_obs.append(
                     #     entity.state.p_pos - agent.state.p_pos
@@ -337,12 +464,12 @@ class Scenario(BaseScenario):
                     # entity_obs.append(np.concatenate((
                     #     [1.0], entity.state.p_pos
                     # )))
-                    entity_obs.append(entity.state.p_pos)
+                    entity_obs.extend(entity.state.p_pos, entity.num_color)
             else:
                 if self.relative_coord:
-                    entity_obs.append(np.array([0.0, 1.0, 1.0]))
+                    entity_obs.append(np.array([0.0, 1.0, 1.0, 0]))
                 else:
-                    entity_obs.append(np.zeros(2))
+                    entity_obs.append(np.zeros(3))
 
         # Communication
 

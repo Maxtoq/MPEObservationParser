@@ -1,6 +1,7 @@
 import argparse
 import keyboard
 import json
+import json
 import time
 
 from utils.embedding.ngram import embedding
@@ -110,9 +111,9 @@ def run(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Scenario
-    parser.add_argument("--env_path", default="env/coop_push_scenario_sparse.py",
+    parser.add_argument("--env_path", default="env/coop_push_scenario_sparse_color.py",
                         help="Path to the environment")
-    parser.add_argument("--sce_conf_path", default="configs/1a_1o_po_rel.json", 
+    parser.add_argument("--sce_conf_path", default="configs/2a_3o_po_rel.json", 
                         type=str, help="Path to the scenario config file")
     parser.add_argument("--sce_init_pos", default=None, 
                         type=str, help="Path to initial positions config file")
@@ -129,11 +130,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    sce_conf = {}
-    if args.sce_conf_path is not None:
-        with open(args.sce_conf_path) as cf:
-            sce_conf = json.load(cf)
-
-    observation = ObservationParser(args)
-    embedding(observation.vocab)
-    #run(args)
+    run(args)

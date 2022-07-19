@@ -11,7 +11,7 @@ class Render_option:
         if keyboard.is_pressed('1'):
             self.range_a1 = not self.range_a1
             print(self.range_a1)
-        if keyboard.is_pressed('2'):
+        if keyboard.is_pressed('3'):
             self.range_a2 = not self.range_a2
 
         return self.range_a1, self.range_a2

@@ -5,7 +5,7 @@ import json
 import time
 
 from utils.embedding.ngram import embedding
-from utils.parsers import ObservationParser, ObservationParserStrat
+from utils.parsers import ObservationParser, ObservationParserStrat, ObservationParserColor, ObservationParserStratColor
 from utils.make_env import make_env
 from utils.actors import KeyboardActor, RandomActor
 from utils.analyse import analyze
@@ -42,7 +42,7 @@ def run(args):
         print("ERROR : Pick correct actors (random or manual)")
         exit(0)
 
-    observation = ObservationParserStrat(args, sce_conf)
+    observation = ObservationParserStratColor(args, sce_conf)
     # Save all the sentences generated
     sentences = [[],[]]
     # Save all the observations generated
@@ -64,7 +64,7 @@ def run(args):
             # Get sentence of the agents
             for agent in range(sce_conf["nb_agents"]):
                 print(agent)
-                sentence = observation.parse_obs(obs[agent],sce_conf,agent)
+                sentence = observation.parse_obs(obs[agent],sce_conf, agent)
                 print(sentence)
                 sentences[agent].append(sentence)
 

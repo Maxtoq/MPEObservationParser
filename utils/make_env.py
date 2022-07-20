@@ -24,6 +24,7 @@ def make_env(scenario_path, sce_conf={}, discrete_action=False):
         .n                  :   Returns the number of Agents
     '''
     #from multiagent.environment import MultiAgentEnv
+    #from utils.render_multiagent import RenderMultiAgent
     from utils.render_multiagent import RenderMultiAgent
 
     # load scenario from script

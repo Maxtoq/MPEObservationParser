@@ -2,6 +2,8 @@
     "nb_agents": 2,
     "nb_objects": 1,
     "obs_range": 0.4,
+    "nb_colors": 1,
+    "nb_shapes": 1,
     "collision_pen": 3.0,
     "relative_coord": true,
     "dist_reward": false

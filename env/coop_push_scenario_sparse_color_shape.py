@@ -34,47 +34,47 @@ class Color_Shape_Entity(Entity):
     # Get the color based on the number
     def num_to_color(self, color):
         match color:
-            #Black
-            case 1:
-                color = [0.3, 0.3, 0.3]
             # Red
-            case 2:
+            case 1:
                 color = [1, 0.22745, 0.18431]
             # Blue
-            case 3:
+            case 2:
                 color = [0, 0.38, 1]
             # Green
-            case 4:
+            case 3:
                 color = [0.2, 0.78 , 0.35]
             # Yellow
-            case 5:
+            case 4:
                 color = [1, 0.8 , 0]
             # Purple
-            case 6:
+            case 5:
                 color = [0.8, 0.21, 0.98]
+            #Black
+            case 6:
+                color = [0.3, 0.3, 0.3]
 
         return color
 
     # Get the color based on the number
     def color_to_num(self, color):
         match color:
-            #Black
-            case [0.3, 0.3, 0.3]:
-                color = 1
             # Red
             case [1, 0.22745, 0.18431]:
-                color = 2
+                color = 1
             # Blue
             case [0, 0.38, 1]:
-                color = 3
+                color = 2
             # Green
             case [0.2, 0.78 , 0.35]:
-                color = 4
+                color = 3
             # Yellow
             case [1, 0.8 , 0]:
-                color = 5
+                color = 4
             # Purple
             case [0.8, 0.21, 0.98]:
+                color = 5
+            #Black
+            case [0.3, 0.3, 0.3]:
                 color = 6
 
         return color
@@ -235,12 +235,14 @@ class PushWorld(World):
 
 class Scenario(BaseScenario):
 
-    def make_world(self, nb_agents=4, nb_objects=1, obs_range=0.4, 
-                   collision_pen=1, relative_coord=True, dist_reward=False, 
+    def make_world(self, nb_agents=4, nb_objects=1, obs_range=0.4, nb_colors=1,
+                   nb_shapes=1, collision_pen=1, relative_coord=True, dist_reward=False, 
                    reward_done=50, step_penalty=0.1, obj_lm_dist_range=[0.2, 1.5]):
         world = PushWorld(nb_agents, nb_objects)
         # add agent
         self.nb_agents = nb_agents
+        self.nb_colors = nb_colors
+        self.nb_shapes = nb_shapes
         for i, agent in enumerate(world.agents):
             agent.name = 'agent %d' % i
             agent.silent = True
@@ -251,38 +253,33 @@ class Scenario(BaseScenario):
         # Objects and landmarks
         self.nb_objects = nb_objects
         
-        # Set list of colors
+        # Set list of colors and shapes
         colors = []
-        color = [1,1,1]
+        all_colors = [1,2,3,4,5,6]
+        all_shapes = [1,2,3]
         shapes = []
-        shape = 1
+        # list of objects_name
+        objects_name = []
         for i, object in enumerate(world.objects):
-            # color = np.random.uniform(0, 1, world.dim_color)
             # Pick a color that is not already taken
-            while True:
-                same = False
-                # Pick a color number
-                color = np.random.randint(1,7)
-        
-                for c in colors:
-                    if c == color:
-                        same = True
-
-                if same == False:
-                    break
+            # Take a random color
+            if len(colors) < nb_colors:
+                color = all_colors.pop(0)
+            # If we already have the maximum nb of color
+            # We pick one from the ones we already have
+            else:
+                color = random.choice(colors)
             colors.append(color)
 
-            while True:
-                same = False
-                # Pick a color number
-                shape = np.random.randint(1,4)
-        
-                for s in shapes:
-                    if s == shape:
-                        same = True
-
-                if same == False:
-                    break
+            # Pick a shape that is not already taken
+            # Take a random color
+            if len(shapes) < nb_shapes:
+                shape = random.sample(all_shapes,1).pop()
+                all_shapes.remove(shape)
+            # If we already have the maximum nb of color
+            # We pick one from the ones we already have
+            else:
+                shape = random.choice(shapes)
             shapes.append(shape)
 
             object.name = 'object %d' % i
@@ -292,23 +289,32 @@ class Scenario(BaseScenario):
             object.shape = object.num_to_shape(shape)
             object.size = OBJECT_SIZE
             object.initial_mass = OBJECT_MASS
+            objects_name.append(object.name)
 
         for land in world.landmarks:
             land.collide = False
             land.size = LANDMARK_SIZE
 
             # Take a random color
-            color = random.choice(colors)
-            colors.remove(color)
+            color = random.sample(colors,1).pop()
+            idx = colors.index(color)
+            del(colors[idx])
+            shape = shapes[idx]
+            del(shapes[idx])
 
             # Corresponding Landmarks
             for i, object in enumerate(world.objects):
-                if object.num_color == color:
+                
+                if object.num_color == color and object.num_shape == shape \
+                    and object.name in objects_name:
+                    
                     land.name = 'landmark %d' % i
                     land.num_color = color
                     land.color = land.num_to_color(color)
-                    land.num_shape = object.num_shape
-                    land.shape = object.shape
+                    land.num_shape = shape
+                    land.shape = land.num_to_shape(shape)
+                    objects_name.remove(object.name)
+                    break
         
         self.obj_lm_dist_range = obj_lm_dist_range
         # Scenario attributes
@@ -333,6 +339,13 @@ class Scenario(BaseScenario):
         return self._done_flag
 
     def reset_world(self, world, seed=None, init_pos=None):
+        # Change colors
+        colors = []
+        all_colors = [1,2,3,4,5,6]
+        # Change shape
+        shapes = []
+        all_shapes = [1,2,3]
+
         if seed is not None:
             np.random.seed(seed)
         # Check if init positions are valid
@@ -358,17 +371,66 @@ class Scenario(BaseScenario):
         # Objects and landmarks' initial pos
         for i, object in enumerate(world.objects):
             if init_pos is None:
+
+                # Pick a color that is not already taken
+                # Take a random color
+                if len(colors) < self.nb_colors:
+                    color = all_colors.pop(0)
+                # If we already have the maximum nb of color
+                # We pick one from the ones we already have
+                else:
+                    color = random.choice(colors)
+                colors.append(color)
+
+
+                # Pick a shape that is not already taken
+                # Take a random color
+                if len(shapes) < self.nb_shapes:
+                    shape = random.sample(all_shapes,1).pop()
+                    all_shapes.remove(shape)
+                # If we already have the maximum nb of color
+                # We pick one from the ones we already have
+                else:
+                    shape = random.choice(shapes)
+                shapes.append(shape)
+
+                # Landmark
+                landmark = None
+                # Set color and shape
+                object.num_color = color
+                object.color = object.num_to_color(color)
+                object.num_shape = shape
+                object.shape = object.num_to_shape(shape)
+                print(object.name)
+
+                for land in world.landmarks:
+                    # Check if the landmark number is the same as the object number
+                    o = int(object.name.split()[-1])
+                    l = int(land.name.split()[-1])
+                    # If same landmark
+                    if o == l:
+                        land.num_color = color
+                        land.color = land.num_to_color(color)
+                        land.num_shape = shape
+                        land.shape = land.num_to_shape(shape)
+                        landmark = land
+                        break
+
                 while True:
                     object.state.p_pos = np.random.uniform(
                         -1 + OBJECT_SIZE, 1 - OBJECT_SIZE, world.dim_p)
-                    world.landmarks[i].state.p_pos = np.random.uniform(
+                    
+                    if landmark != None:
+                        landmark.state.p_pos = np.random.uniform(
                         -1 + OBJECT_SIZE, 1 - OBJECT_SIZE, world.dim_p)
-                    dist = get_dist(object.state.p_pos, 
-                                    world.landmarks[i].state.p_pos)
-                    if (self.obj_lm_dist_range is None  or 
-                        (dist > self.obj_lm_dist_range[0] and 
-                         dist < self.obj_lm_dist_range[1])):
-                        break
+
+                        dist = get_dist(object.state.p_pos, 
+                                    landmark.state.p_pos)   
+                        print("Dist: " + object.name + " " + landmark.name + ": " + str(dist))                
+                        if (self.obj_lm_dist_range is None  or 
+                            (dist > self.obj_lm_dist_range[0] and 
+                            dist < self.obj_lm_dist_range[1])):
+                            break
             else:
                 object.state.p_pos = np.array(init_pos["objects"][i])
                 world.landmarks[i].state.p_pos = np.array(init_pos["landmarks"][i])
@@ -387,8 +449,8 @@ class Scenario(BaseScenario):
         for obj in world.objects:
             for land in world.landmarks:
                 # Check if the landmark number is the same as the object number
-                o = [int(n) for n in obj.name.split() if n.isdigit()]
-                l = [int(n) for n in land.name.split() if n.isdigit()]
+                o = int(obj.name.split()[-1])
+                l = int(land.name.split()[-1])
                 if o == l:
                     dists.append(get_dist(obj.state.p_pos, 
                           land.state.p_pos))
@@ -489,7 +551,7 @@ class Scenario(BaseScenario):
                     )))
             else:
                 if self.relative_coord:
-                    entity_obs.append(np.array([0.0, 1.0, 1.0, 0.0, 0.0, 0, 0]))
+                    entity_obs.append(np.array([0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]))
                 else:
                     entity_obs.append(np.zeros(6))
         for entity in world.landmarks:

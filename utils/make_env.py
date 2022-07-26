@@ -23,9 +23,17 @@ def make_env(scenario_path, sce_conf={}, discrete_action=False):
         .action_space       :   Returns the action space for each agent
         .n                  :   Returns the number of Agents
     '''
+    # Get right env
+    match scenario_path:
+        case "env/coop_push_scenario_sparse.py":
+            from utils.render_multiagent import RenderMultiAgent
+        case "env/coop_push_scenario_sparse_color.py":
+            from utils.render_multiagent import RenderMultiAgent
+        case "env/coop_push_scenario_sparse_color_shape.py":
+            from utils.render_shape_multiagent import RenderMultiAgent
     #from multiagent.environment import MultiAgentEnv
+    #from utils.render_shape_multiagent import RenderMultiAgent
     #from utils.render_multiagent import RenderMultiAgent
-    from utils.render_multiagent import RenderMultiAgent
 
     # load scenario from script
     scenario = imp.load_source('', scenario_path).Scenario()

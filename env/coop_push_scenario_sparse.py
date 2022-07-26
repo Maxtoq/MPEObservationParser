@@ -1,7 +1,7 @@
 import numpy as np
 
 from multiagent.scenario import BaseScenario
-from multiagent.core import World, Agent, Action, Entity
+from multiagent.core import World, Agent, Action, Entity, Landmark
 
 LANDMARK_SIZE = 0.1
 OBJECT_SIZE = 0.15
@@ -21,10 +21,6 @@ def obj_callback(agent, world):
     action.u = np.zeros((world.dim_p))
     action.c = np.zeros((world.dim_c))
     return action
-
-class Landmark(Entity):
-     def __init__(self):
-        super(Landmark, self).__init__()
 
 class Object(Entity):
     def __init__(self):
@@ -145,8 +141,8 @@ class PushWorld(World):
 
 class Scenario(BaseScenario):
 
-    def make_world(self, nb_agents=4, nb_objects=1, obs_range=0.4, 
-                   collision_pen=1, relative_coord=True, dist_reward=False, 
+    def make_world(self, nb_agents=4, nb_objects=1, obs_range=0.4, nb_colors=1,
+                   nb_shapes=1, collision_pen=1, relative_coord=True, dist_reward=False, 
                    reward_done=50, step_penalty=0.1, obj_lm_dist_range=[0.2, 1.5]):
         world = PushWorld(nb_agents, nb_objects)
         # add agent
@@ -187,6 +183,7 @@ class Scenario(BaseScenario):
         self.step_penalty = step_penalty
         # make initial conditions
         self.reset_world(world)
+
         return world
 
     def done(self, agent, world):
@@ -241,6 +238,7 @@ class Scenario(BaseScenario):
         for entity in world.entities:
             entity.state.p_vel = np.zeros(world.dim_p)
         self._done_flag = False
+
 
     def reward(self, agent, world):
         # Reward = -1 x squared distance between objects and corresponding landmarks

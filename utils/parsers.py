@@ -3,7 +3,7 @@ from math import sqrt
 
 from abc import ABC, abstractmethod
 
-from utils.mapper import Mapper
+from utils.mapper import Mapper, ColorMapper
 
 # Mother classes
 class Parser(ABC):
@@ -630,12 +630,47 @@ class ObservationParserStratColor(ColorParser):
         for nb_agent in range(sce_conf['nb_agents']):
             self.time.append(0)
 
-        self.map = Mapper(args, sce_conf)
+        self.map = ColorMapper(args, sce_conf)
         self.colors = colors
 
+    # Return a random object based on the list of objects
+    def select_not_object(self, objects):
+        list_obj = []
+        list_land = []
+        list = []
+        if len(objects) > 0:
+            # Choose the type of sentence
+            """
+            1: return 1 landmark and 1 object
+            2: return 1 object
+            3: return 1 landmark
+            """
+            type = random.randint(1,3)
+            print("Type: " + str(type))
+            if type == 1:
+                for obj in objects:
+                    if obj[0] == 2:
+                        list_obj.append(obj)
+                for obj in objects:
+                    if obj[0] == 3:
+                        list_land.append(obj)
+                if len(list_obj) > 0 :
+                    list.extend([random.choice(list_obj)])
+                if len(list_land) > 0 :
+                    list.extend([random.choice(list_land)])
+            else :
+                for obj in objects:
+                    if obj[0] == type:
+                        list_obj.append([obj])
+                if len(list_obj) > 0 :
+                    list.extend(random.choice(list_obj)) 
+
+        return list
+
+
     def not_sentence(self, i, j, nb_agent):
-        """print("------------------------- NOT SENTENCE -------------------------")
-        print(self.map.area[nb_agent])
+        print("------------------------- NOT SENTENCE -------------------------")
+        """print(self.map.area[nb_agent])
         print(self.map.area_obj)"""
         # Position of the agent
         position = []
@@ -645,6 +680,8 @@ class ObservationParserStratColor(ColorParser):
         check = ""
         # Variable to check if the agent saw objects
         obj = 0
+        objects = []
+        obj_name = {2: "Object", 3: "Landmark"}
 
         # Depending on the position of the agent
         # Set the "position" variable
@@ -668,45 +705,36 @@ class ObservationParserStratColor(ColorParser):
             position.append("Center")
             check="Center"
 
-        # Initalize the obj variable
-        obj = self.map.area_obj[nb_agent][i][j]
-        if obj >=4 and obj != 5:
-            obj = obj//2
-            
         # If the agent discovered a whole area
         # We have to check all 3 areas
         if check == "North":
             # Update the object value depending on the objects in the area
-            obj = self.map.check_area(nb_agent, 0, 0, obj)
+            objects = self.map.check_area(nb_agent, 0, 0, obj, self.colors)
             # Then we reset the area
             self.map.reset_areas(0, nb_agent)
         elif check == "South":
-            obj = self.map.check_area(nb_agent, 0, 2, obj)
+            objects = self.map.check_area(nb_agent, 0, 2, obj, self.colors)
             self.map.reset_areas(1, nb_agent)
         elif check == "West":
-            obj = self.map.check_area(nb_agent, 1, 0, obj)
+            objects = self.map.check_area(nb_agent, 1, 0, obj, self.colors)
             self.map.reset_areas(2, nb_agent)
         elif check == "East":
-            obj = self.map.check_area(nb_agent, 1, 2, obj)
+            objects = self.map.check_area(nb_agent, 1, 2, obj, self.colors)
             self.map.reset_areas(3, nb_agent)
         elif check == "Center":
             # Always reset the center
             self.map.reset_areas(4, nb_agent)
+        # If we don't have to check a big area
+        else :
+            objects = self.map.find_missing(nb_agent, i, j, self.colors)
 
-        # Depending on the objects in the area
-        # Creates the not sentence
-        if obj == 0:
-            n_sent.extend(["Object","Not"])
+        objects = self.select_not_object(objects)
+
+        # One object sentence
+        for i in range(len(objects)):
+            n_sent.extend([self.get_color(objects[i][1]),obj_name[objects[i][0]], \
+                "Not"])
             n_sent.extend(position)
-            n_sent.extend(["Landmark","Not"])
-            n_sent.extend(position)
-        if obj == 2:
-            n_sent.extend(["Landmark","Not"])
-            n_sent.extend(position)
-        if obj == 3:
-            n_sent.extend(["Object","Not"])
-            n_sent.extend(position)
-        # If obj == 4 : both object are in the area
 
         return n_sent 
 
@@ -822,7 +850,14 @@ class ObservationParserStratColor(ColorParser):
             if  obs[place] == 1 :
 
                 #We update the area_obj
-                self.map.update_area_obj(obs[0], obs[1],2,nb_agent)
+                """
+                obs[0] pos x of the agent
+                obs[1] pos y of the agent
+                object type : 2
+                object color
+                nb of the agent
+                """
+                self.map.update_area_obj(obs[0], obs[1],2,obs[place+5],nb_agent)
                 sentence.append(self.get_color(obs[place+5]))
                 sentence.append("Object")
                  # North / South
@@ -881,7 +916,14 @@ class ObservationParserStratColor(ColorParser):
             if  obs[place] == 1 :
 
                 #We update the area_obj
-                self.map.update_area_obj( obs[0], obs[1],3, nb_agent)
+                """
+                obs[0] pos x of the agent
+                obs[1] pos y of the agent
+                object type : 2
+                object color
+                nb of the agent
+                """
+                self.map.update_area_obj( obs[0], obs[1],3, obs[place+3], nb_agent)
                 sentence.append(self.get_color(obs[place+3]))
                 sentence.append("Landmark")
                 
@@ -954,7 +996,7 @@ class ObservationParserStratColor(ColorParser):
         position = []
         # If the action of pushing happens
         push = False
-
+        print(self.map.area_object[0])
         # Get the position of the agent
         sentence.extend(self.position_agent(obs))
         for i in range(1,len(sentence)):

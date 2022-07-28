@@ -432,7 +432,7 @@ class Mapper:
         return obj
 
 
-class ColorMapper:
+class ColorMapper(Mapper):
 
     def __init__(self, args, sce_conf):
         self.args = args
@@ -463,18 +463,6 @@ class ColorMapper:
                 newAgent.append(newLine)
             self.area.append(newAgent)
 
-        # Initialization of the area map with objects
-        # Each 0 is the number of objects found in the area
-        self.area_obj = []
-        for nb_agent in range(sce_conf['nb_agents']):
-            newAgent = []
-            for line in range(3):
-                newLine = []
-                for col in range(3):
-                    newLine.append(0)
-                newAgent.append(newLine)
-            self.area_obj.append(newAgent)
-
         self.area_object = []
         for nb_agent in range(sce_conf['nb_agents']):
             newAgent = []
@@ -485,70 +473,6 @@ class ColorMapper:
                     newLine.append(obj)
                 newAgent.append(newLine)
             self.area_object.append(newAgent)
-
-    # Update the value of the world map
-    def update_world(self, posX, posY, nb_agent):
-
-        #Check the position of the agent
-        # To update the value of the world
-        
-        # North
-        # Can be in a corner
-        if posY >= 0.66 :
-            self.update_world_section(nb_agent,0,posX,corner = True)
-        if posY >= 0.33 and posY <= 0.66 :
-            self.update_world_section(nb_agent,1,posX,corner = True)
-
-        # Center
-        if posY >= 0 and posY <= 0.33 :
-            self.update_world_section(nb_agent,2,posX,corner = False)
-        if posY >= -0.33 and posY <= 0 :
-            self.update_world_section(nb_agent,3,posX,corner = False)
-
-        # South 
-        # Can be in a corner
-        if posY >= -0.66 and posY <= -0.33 :
-            self.update_world_section(nb_agent,4,posX,corner = True)
-        if posY <= -0.66:
-            self.update_world_section(nb_agent,5,posX,corner = True)
-
-        """# To see what the agent saw
-        for l in range(6) :   
-            print(self.world[nb_agent][l])"""
-
-    # Update a section of the world map
-    def update_world_section(self, nb_agent, num_array, posX, corner):
-        # 0 means not discovered
-        # 1 means discovered
-        # 2 means discovered in corners
-
-        if corner == True:
-            # In a corner so = 2 (for the two possible areas)
-            if posX <= -0.66:
-                self.world[nb_agent][num_array][0] = 2
-            if posX >= -0.66 and posX <= -0.33:
-                self.world[nb_agent][num_array][1] = 2
-            if posX >= -0.33 and posX <= 0:
-                self.world[nb_agent][num_array][2] = 1
-            if posX >= 0 and posX <= 0.33:
-                self.world[nb_agent][num_array][3] = 1
-            if posX >= 0.33 and posX <= 0.66:
-                self.world[nb_agent][num_array][4] = 2
-            if posX >= 0.66:
-                self.world[nb_agent][num_array][5] = 2
-        else:
-            if posX <= -0.66:
-                self.world[nb_agent][num_array][0] = 1
-            if posX >= -0.66 and posX <= -0.33:
-                self.world[nb_agent][num_array][1] = 1
-            if posX >= -0.33 and posX <= 0:
-                self.world[nb_agent][num_array][2] = 1
-            if posX >= 0 and posX <= 0.33:
-                self.world[nb_agent][num_array][3] = 1
-            if posX >= 0.33 and posX <= 0.66:
-                self.world[nb_agent][num_array][4] = 1
-            if posX >= 0.66:
-                self.world[nb_agent][num_array][5] = 1
 
     # Update the array of objects
     def update_area_obj(self, agent_x, agent_y, object_nb, object_color, nb_agent):
@@ -620,142 +544,6 @@ class ColorMapper:
                 if self.area_object[nb_agent][1][1][0] == 0:
                     self.area_object[nb_agent][1][1][0] = 1
 
-    # Check if an area is fully dicovered
-    def count_discovered(self, nb_agent, world_array_posx, world_array_posy):
-        max_count = 0
-        count = 0
-
-        # Count the number of cell discovered
-        for i in range(world_array_posx[0], world_array_posx[1]):
-            for j in range(world_array_posy[0], world_array_posy[1]):
-                max_count += 1
-                # if == 1 or == 2, the agent saw it
-                if self.world[nb_agent][i][j] >= 1 :
-                    count += 1
-                else:
-                    break
-        
-        # Returns True or False depending on 
-        # If the agent saw it entirely
-        if count == max_count:
-            return True
-        else:
-            return False
-
-    # Check in a corner area is fully discovered
-    def count_discovered_corner(self, nb_agent, world_array_posx, world_array_posy):
-        max_count = 0
-        count = 0
-
-        # Count the number of cell discovered (corner)
-        for i in range(world_array_posx[0], world_array_posx[1]):
-            for j in range(world_array_posy[0], world_array_posy[1]):
-                max_count += 1
-                # if == 2, the agent saw the corner
-                if self.world[nb_agent][i][j] > 1 :
-                    count += 1
-                else:
-                    break
-        
-        # Returns True or False depending on 
-        # If the agent saw it entirely
-        if count == max_count:
-            return True
-        else:
-            return False
-
-    # Update the area map
-    def update_area(self, nb_agent):
-        # Check the world to see if some area were fully discovered
-        #print(self.area[nb_agent])
-        # If North is not fully discovered
-        if (self.area[nb_agent][0][0] < 1 or 
-            self.area[nb_agent][0][1] < 1 or 
-            self.area[nb_agent][0][2] < 1):
-            # North West 
-            if self.area[nb_agent][0][0] < 2 :
-                if self.count_discovered_corner(nb_agent,[0,2],[0,2]):
-                        self.area[nb_agent][0][0] = 2
-                        # Generate a not sentence
-                        #return self.not_sentence(0,0, nb_agent)
-                        return 0, 0, nb_agent
-            # North Center
-            if self.area[nb_agent][0][1] != 1:
-                if self.count_discovered(nb_agent,[0,2],[2,4]):
-                    if self.area[nb_agent][0][1] == 0:
-                        self.area[nb_agent][0][1] = 1
-            # North East
-            if self.area[nb_agent][0][2] < 2:
-                if self.count_discovered_corner(nb_agent,[0,2],[4,6]):
-                        self.area[nb_agent][0][2] = 2
-                        # Generate a not sentence
-                        #return self.not_sentence(0,2, nb_agent)
-                        return 0, 2, nb_agent
-        else:
-            #return self.not_sentence(0,1, nb_agent)
-            return 0, 1, nb_agent
-
-        # If Center not fully discovered
-        if (self.area[nb_agent][1][0] != 1 or 
-            self.area[nb_agent][1][1] != 1 or
-            self.area[nb_agent][1][2] != 1):
-            # Center West 
-            if self.area[nb_agent][1][0] != 1:
-                if self.count_discovered(nb_agent,[2,4],[0,2]):
-                    if self.area[nb_agent][1][0] == 0:
-                        self.area[nb_agent][1][0] = 1
-            # Center Center
-            if self.area[nb_agent][1][1] != 1:
-                if self.count_discovered(nb_agent,[2,4],[2,4]):
-                    if self.area[nb_agent][1][1] == 0:
-                        self.area[nb_agent][1][1] = 1
-                    #return self.not_sentence(1,1, nb_agent)
-                    return 1, 1, nb_agent
-            # Center East
-            if self.area[nb_agent][1][2] != 1:
-                if self.count_discovered(nb_agent,[2,4],[4,6]):
-                    if self.area[nb_agent][1][2] == 0:
-                        self.area[nb_agent][1][2] = 1
-
-        # If South is not fully discovered
-        if (self.area[nb_agent][2][0] < 1 or 
-            self.area[nb_agent][2][1] < 1 or 
-            self.area[nb_agent][2][2] < 1):
-            # South West 
-            if self.area[nb_agent][2][0] < 2:
-                if self.count_discovered_corner(nb_agent,[4,6],[0,2]):
-                        self.area[nb_agent][2][0] = 2
-                        #return self.not_sentence(2,0, nb_agent)
-                        return 2, 0, nb_agent
-            # South Center
-            if self.area[nb_agent][2][1] != 1:
-                if self.count_discovered(nb_agent,[4,6],[2,4]):
-                    if self.area[nb_agent][2][1] == 0:
-                        self.area[nb_agent][2][1] = 1
-            # South East
-            if self.area[nb_agent][2][2] < 2:
-                if self.count_discovered_corner(nb_agent,[4,6],[4,6]):
-                        self.area[nb_agent][2][2] = 2
-                        #return self.not_sentence(2,2, nb_agent)
-                        return 2, 2, nb_agent
-        else:
-            #return self.not_sentence(2,1, nb_agent)
-            return 2, 1, nb_agent
-
-        # West and East
-        # If the 3 areas were discovered
-        if (self.area[nb_agent][0][0] >= 1 and 
-            self.area[nb_agent][1][0] >= 1 and
-            self.area[nb_agent][2][0] >= 1):
-            # Generate the not_sentence
-            #return self.not_sentence(1,0, nb_agent)
-            return 1, 0, nb_agent
-        if (self.area[nb_agent][0][2] >= 1 and 
-            self.area[nb_agent][1][2] >= 1 and
-            self.area[nb_agent][2][2] >= 1):
-            #return self.not_sentence(1,2, nb_agent)
-            return 1, 2, nb_agent
-
     # Reset the area map
     def reset_area(self, nb_agent, direction, area_pos):
 
@@ -782,14 +570,6 @@ class ColorMapper:
                     self.area_object[nb_agent][i][area_pos][0] = 1
                 else:
                     self.area_object[nb_agent][i][area_pos] = [0]
-
-
-    # Reset the world map
-    def reset_world(self, nb_agent, world_array_posx, world_array_posy):
-        # Reset the world map depending on the array position
-        for i in range(world_array_posx[0],world_array_posx[1]) :
-                for j in range(world_array_posy[0],world_array_posy[1]):
-                    self.world[nb_agent][i][j] -= 1 
 
     # Reset all the maps
     def reset_areas(self, area_nb, nb_agent):
@@ -823,7 +603,6 @@ class ColorMapper:
                 self.area_object[nb_agent][1][1] = [0]
             # Reset the world
             self.reset_world(nb_agent,[2,4],[2,4])
-
 
     # Check an area to see if there is an object
     def check_area(self, nb_agent, direction, area_pos, obj, all_colors):
@@ -870,3 +649,4 @@ class ColorMapper:
                 objects_not_visible.append(obj)
         return objects_not_visible
         
+

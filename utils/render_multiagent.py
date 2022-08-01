@@ -45,25 +45,25 @@ class RenderMultiAgent(MultiAgentEnv):
             self.render_geoms_xform = []
             agent = 0
             for entity in self.world.entities:
-                geom = rendering.make_circle(entity.size)
+                
                 xform = rendering.Transform()
                 if 'agent' in entity.name:
+                    geom = rendering.make_circle(entity.size)
                     geom.set_color(*entity.color, alpha=0.5)
                     if (agent == 0 and range1 == True) or (agent == 1 and range2 == True):
                         vision = rendering.make_circle(0.4)
                         vision.set_color(*entity.color, alpha=0.2)
                         vision.add_attr(xform)
                         self.render_geoms.append(vision)
-                    """if agent == 0 and range1 == True:
-                        vision = rendering.make_circle(0.4)
-                        vision.add_attr(xform)
-                        self.render_geoms.append(vision)
-                    if agent == 1 and range2 == True:
-                        vision = rendering.make_circle(0.4)
-                        vision.add_attr(xform)
-                        self.render_geoms.append(vision)"""
                     agent += 1
                 else:
+                    if entity.shape == "circle":
+                        geom = rendering.make_circle(entity.size)
+                    elif entity.shape == "square":
+                        geom = rendering.make_square(entity.size, entity.size)
+                    elif entity.shape == "triangle":
+                        geom = rendering.make_triangle(entity.size, entity.size)
+
                     geom.set_color(*entity.color)
                 geom.add_attr(xform)
                 self.render_geoms.append(geom)

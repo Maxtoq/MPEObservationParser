@@ -1,11 +1,11 @@
 import argparse
+import random
 import keyboard
 import json
 import json
 import time
 
 from utils.embedding.ngram import embedding
-from utils.parsers import ObservationParser, ObservationParserStrat, ObservationParserColor, ObservationParserStratColor, ObservationParserColorShape, ObservationParserStratColorShape
 from utils.make_env import make_env
 from utils.actors import KeyboardActor, RandomActor
 from utils.analyse import analyze
@@ -22,8 +22,8 @@ def run(args):
             sce_conf = json.load(cf)
 
     # Create environment
-    env = make_env(
-        args.env_path, 
+    env, parser = make_env(
+        args, 
         discrete_action=args.discrete_action, 
         sce_conf=sce_conf) 
 
@@ -44,53 +44,7 @@ def run(args):
     
     # Get the color and shape if needed
     colors = []
-    shapes = []
-    # Get the right parser based on the env
-    observation = None
-    match args.env_path:
-        case "env/coop_push_scenario_sparse.py":
-            if args.parser == "basic":
-                observation = ObservationParser(args)
-            elif args.parser == "strat":
-                observation = ObservationParserStrat(args, sce_conf)
-            else:
-                print("ERROR : Pick correct parser (basic or strat)")
-                exit(0)
-
-        case "env/coop_push_scenario_sparse_color.py":
-            # Get all the possible colors of the episode
-            for object in env.world.objects :
-                colors.append(object.num_color)
-
-            if args.parser == "basic":
-                observation = ObservationParserColor(args, colors)
-            elif args.parser == "strat":
-                observation = ObservationParserStratColor(args, sce_conf, colors)
-            else:
-                print("ERROR : Pick correct parser (basic or strat)")
-                exit(0)
-
-        case "env/coop_push_scenario_sparse_color_shape.py":
-            # Get all the possible colors and shapes of the episode
-            for object in env.world.objects :
-                colors.append(object.num_color)
-                shapes.append(object.num_shape)
-
-            if args.parser == "basic":
-                observation = ObservationParserColorShape(args, colors, shapes)
-            elif args.parser == "strat":
-                observation = ObservationParserStratColorShape(args, sce_conf)
-            else:
-                print("ERROR : Pick correct parser (basic or strat)")
-                exit(0)
-
-    if observation == None:
-        print("ERROR : Pick correct env_path : env/coop_push_scenario_sparse + ")
-        print(".py")
-        print("_color.py")
-        print("_color_shape.py")
-        exit(0)
-
+    shapes = []    
 
     # Save all the sentences generated
     sentences = [[],[]]
@@ -102,7 +56,18 @@ def run(args):
     render_op = Render_option()
 
     for ep_i in range(args.n_episodes):
+        # Reset the environment
         obs = env.reset(init_pos=init_pos_scenar)
+
+        # Get the colors and the shapes of the episode
+        colors = []
+        shapes = []
+        for object in env.world.objects :
+                colors.append(object.num_color)
+                shapes.append(object.num_shape)
+
+        #observation.reset(sce_conf, colors, shapes)
+        parser.reset(sce_conf, colors, shapes)
         for step_i in range(args.episode_length):
             print("Step", step_i)
             print("Observations:", obs)
@@ -113,10 +78,11 @@ def run(args):
             # Get sentence of the agents
             for agent in range(sce_conf["nb_agents"]):
                 print(agent)
+                # Call the right parser
                 if args.parser == "basic":
-                    sentence = observation.parse_obs(obs[agent],sce_conf)
+                    sentence = parser.parse_obs(obs[agent],sce_conf)
                 if args.parser == 'strat':
-                    sentence = observation.parse_obs(obs[agent],sce_conf, agent)
+                    sentence = parser.parse_obs(obs[agent],sce_conf, agent)
                 print(sentence)
                 sentences[agent].append(sentence)
 
@@ -163,7 +129,7 @@ def run(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Scenario
-    parser.add_argument("--env_path", default="env/coop_push_scenario_sparse_color_shape.py",
+    parser.add_argument("--env_path", default="env/simple_spread.py",
                         help="Path to the environment")
     parser.add_argument("--sce_conf_path", default="configs/2a_3o_po_rel.json", 
                         type=str, help="Path to the scenario config file")

@@ -1,0 +1,10 @@
+{
+    "nb_agents": 2,
+    "nb_objects": 5,
+    "obs_range": 0.4,
+    "nb_colors": 3,
+    "nb_shapes": 2,
+    "collision_pen": 3.0,
+    "relative_coord": true,
+    "dist_reward": false
+}

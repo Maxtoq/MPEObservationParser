@@ -431,6 +431,45 @@ class Mapper:
 
         return obj
 
+    def reset(self, sce_conf):
+        # Initialization of the world map
+        # To track the agent
+        self.world = []
+        for nb_agent in range(sce_conf['nb_agents']):
+            newAgent = []
+            for line in range(6):
+                newLine = []
+                for col in range(6):
+                    newLine.append(0)
+                newAgent.append(newLine)
+            self.world.append(newAgent)
+        
+
+        # Initialization of the area map
+        # Each 0 is an area (North, South, West, East)
+        # That has not been fully discovered
+        self.area = []
+        for nb_agent in range(sce_conf['nb_agents']):
+            newAgent = []
+            for line in range(3):
+                newLine = []
+                for col in range(3):
+                    newLine.append(0)
+                newAgent.append(newLine)
+            self.area.append(newAgent)
+
+        # Initialization of the area map with objects
+        # Each 0 is the number of objects found in the area
+        self.area_obj = []
+        for nb_agent in range(sce_conf['nb_agents']):
+            newAgent = []
+            for line in range(3):
+                newLine = []
+                for col in range(3):
+                    newLine.append(0)
+                newAgent.append(newLine)
+            self.area_obj.append(newAgent)
+
 
 class ColorMapper(Mapper):
 
@@ -605,7 +644,7 @@ class ColorMapper(Mapper):
             self.reset_world(nb_agent,[2,4],[2,4])
 
     # Check an area to see if there is an object
-    def check_area(self, nb_agent, direction, area_pos, obj, all_colors):
+    def check_area(self, nb_agent, direction, area_pos, all_colors):
         objects = []
         list_all_obj = []
         for c in all_colors:
@@ -635,6 +674,8 @@ class ColorMapper(Mapper):
         list_obj = []
         list_all_obj = []
         objects_not_visible = []
+        print("COLORS AVAILABLE")
+        print(all_colors)
         # Create a list with all the possible objects
         # Each color has an object and a landmark
         for c in all_colors:
@@ -649,4 +690,139 @@ class ColorMapper(Mapper):
                 objects_not_visible.append(obj)
         return objects_not_visible
         
+    def reset(self, sce_conf):
+        # Initialization of the world map
+        # To track the agent
+        self.world = []
+        for nb_agent in range(sce_conf['nb_agents']):
+            newAgent = []
+            for line in range(6):
+                newLine = []
+                for col in range(6):
+                    newLine.append(0)
+                newAgent.append(newLine)
+            self.world.append(newAgent)
+        
 
+        # Initialization of the area map
+        # Each 0 is an area (North, South, West, East)
+        # That has not been fully discovered
+        self.area = []
+        for nb_agent in range(sce_conf['nb_agents']):
+            newAgent = []
+            for line in range(3):
+                newLine = []
+                for col in range(3):
+                    newLine.append(0)
+                newAgent.append(newLine)
+            self.area.append(newAgent)
+
+        # Initialization of the area map with objects
+        self.area_object = []
+        for nb_agent in range(sce_conf['nb_agents']):
+            newAgent = []
+            for line in range(3):
+                newLine = []
+                for col in range(3):
+                    obj = [0]
+                    newLine.append(obj)
+                newAgent.append(newLine)
+            self.area_object.append(newAgent)
+
+
+class ColorShapeMapper(ColorMapper):
+
+    def __init__(self, args, sce_conf):
+        super().__init__(args,sce_conf)
+
+    # Update the array of objects
+    def update_area_obj(self, agent_x, agent_y, object_nb, object_color, object_shape, nb_agent):
+
+        object = [object_nb,object_color,object_shape]
+        # North
+        if agent_y >= 0.33:
+            if agent_x >= 0.33:
+                if object not in self.area_object[nb_agent][0][2]:
+                    self.area_object[nb_agent][0][2].append(object)
+                    # Corner so = 2
+                if self.area_object[nb_agent][0][2][0] < 2:
+                    self.area_object[nb_agent][0][2][0] = 2
+            elif agent_x <= -0.33:
+                if object not in self.area_object[nb_agent][0][0]:
+                    self.area_object[nb_agent][0][0].append(object)
+                    # Corner so = 2
+                if self.area_object[nb_agent][0][0][0] < 2:
+                    self.area_object[nb_agent][0][0][0] = 2
+            else :
+                if object not in self.area_object[nb_agent][0][1]:
+                    self.area_object[nb_agent][0][1].append(object)
+                    # Not corner so = 1
+                if self.area_object[nb_agent][0][1][0] == 0:
+                    self.area_object[nb_agent][0][1][0] = 1
+        # South
+        elif agent_y <= -0.33:
+            if agent_x >= 0.33:
+                if object not in self.area_object[nb_agent][2][2]:
+                    self.area_object[nb_agent][2][2].append(object)
+                    # Corner so = 2
+                if self.area_object[nb_agent][2][2][0] < 2:
+                    self.area_object[nb_agent][2][2][0] = 2
+            elif agent_x <= -0.33:
+                if object not in self.area_object[nb_agent][2][0]:
+                    self.area_object[nb_agent][2][0].append(object)
+                # Corner so = 2
+                if self.area_object[nb_agent][2][0][0] < 2:
+                    self.area_object[nb_agent][2][0][0] = 2
+            else :
+                if object not in self.area_object[nb_agent][2][1]:
+                    self.area_object[nb_agent][2][1].append(object)
+                # Not corner so = 1
+                if self.area_object[nb_agent][2][1][0] == 0:
+                    self.area_object[nb_agent][2][1][0] = 1
+        
+        # Center
+        else:
+            if agent_x >= 0.33:
+                if object not in self.area_object[nb_agent][1][2]:
+                    self.area_object[nb_agent][1][2].append(object)
+                # Corner so = 2
+                if self.area_object[nb_agent][1][2][0] == 0:
+                    self.area_object[nb_agent][1][2][0] = 1
+            elif agent_x <= -0.33:
+                if object not in self.area_object[nb_agent][1][0]:
+                    self.area_object[nb_agent][1][0].append(object)
+                # Corner so = 2
+                if self.area_object[nb_agent][1][0][0] == 0:
+                    self.area_object[nb_agent][1][0][0] = 1
+            else :
+                if object not in self.area_object[nb_agent][1][1]:
+                    self.area_object[nb_agent][1][1].append(object)
+                # Not corner so = 1
+                if self.area_object[nb_agent][1][1][0] == 0:
+                    self.area_object[nb_agent][1][1][0] = 1
+
+    # Check an area to see if there is an object
+    def check_area(self, nb_agent, direction, area_pos, all_colors, all_shapes):
+        objects = []
+        list_all_obj = []
+        for c in all_colors:
+            if [2,c] not in list_all_obj and [3,c] not in list_all_obj:
+                list_all_obj.append([2,c])
+                list_all_obj.append([3,c])
+        # If North or South
+        if direction == 0:
+            for x in range(3) :
+                objects = self.area_object[nb_agent][area_pos][x]
+                for obj in objects:
+                    if obj in list_all_obj:
+                        list_all_obj.remove(obj)
+
+        # If West or East
+        elif direction == 1:
+            for x in range(3) :
+                objects = self.area_object[nb_agent][x][area_pos]
+                for obj in objects:
+                    if obj in list_all_obj:
+                        list_all_obj.remove(obj)
+
+        return list_all_obj

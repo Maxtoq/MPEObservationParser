@@ -1,7 +1,6 @@
 from utils.analyse import save_analyse
 from utils.make_env import make_env
 from utils.actors import RandomActor
-from utils.parsers import ObservationParser, ObservationParserStrat
 import time
 import json
 
@@ -54,8 +53,8 @@ def execution_time(args):
             sce_conf = json.load(cf)
 
     # Create environment
-    env = make_env(
-        args.env_path, 
+    env, parser = make_env(
+        args, 
         discrete_action=args.discrete_action, 
         sce_conf=sce_conf) 
 
@@ -68,7 +67,6 @@ def execution_time(args):
 
 
     actor = RandomActor(sce_conf["nb_agents"])
-    observation = ObservationParserStrat(args, sce_conf)
 
     # Save all the sentences generated
     sentences = [[],[]]
@@ -82,6 +80,14 @@ def execution_time(args):
     
     for ep_i in range(args.n_episodes):
         obs = env.reset(init_pos=init_pos_scenar)
+
+        # Get the colors and the shapes of the episode
+        colors = []
+        shapes = []
+        for object in env.world.objects :
+                colors.append(object.num_color)
+                shapes.append(object.num_shape)
+                
         for step_i in range(args.episode_length):
             # Get action
             actions = actor.get_action()
@@ -90,7 +96,11 @@ def execution_time(args):
             for agent in range(sce_conf["nb_agents"]):
                 #sentence = " "
                 #sentence = observation.parse_obs(obs[agent],sce_conf)
-                sentence = observation.parse_obs(obs[agent],sce_conf,agent)
+                # Call the right parser
+                if args.parser == "basic":
+                    sentence = parser.parse_obs(obs[agent],sce_conf)
+                if args.parser == 'strat':
+                    sentence = parser.parse_obs(obs[agent],sce_conf, agent)
                 sentences[agent].append(sentence)
 
             observations.append(obs)

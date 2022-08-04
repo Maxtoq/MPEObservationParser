@@ -47,7 +47,12 @@ def run(args):
     shapes = []    
 
     # Save all the sentences generated
-    sentences = [[],[]]
+    #sentences = [[],[]]
+    sentences = []
+    for nb_agent in range(sce_conf['nb_agents']):
+        newAgent = []
+        sentences.append(newAgent)
+
     # Save all the observations generated
     observations = []
     # Save all the actions genenrated
@@ -62,9 +67,10 @@ def run(args):
         # Get the colors and the shapes of the episode
         colors = []
         shapes = []
-        for object in env.world.objects :
-                colors.append(object.num_color)
-                shapes.append(object.num_shape)
+        if hasattr(env.world, 'objects'):
+            for object in env.world.objects :
+                    colors.append(object.num_color)
+                    shapes.append(object.num_shape)
 
         #observation.reset(sce_conf, colors, shapes)
         parser.reset(sce_conf, colors, shapes)
@@ -131,7 +137,7 @@ if __name__ == "__main__":
     # Scenario
     parser.add_argument("--env_path", default="env/simple_spread.py",
                         help="Path to the environment")
-    parser.add_argument("--sce_conf_path", default="configs/2a_3o_po_rel.json", 
+    parser.add_argument("--sce_conf_path", default="configs/simple_spread_3a.json", 
                         type=str, help="Path to the scenario config file")
     parser.add_argument("--sce_init_pos", default=None, 
                         type=str, help="Path to initial positions config file")

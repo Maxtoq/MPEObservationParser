@@ -36,12 +36,12 @@ class Parser(ABC):
 
         return sentence
 
-    @abstractmethod
+    """@abstractmethod
     def objects_sentence(self, obs, sce_conf):
-        """
+        
         Returns a sentence generated based on the objects see or not by the agent
-        """
-        raise NotImplementedError
+        
+        raise NotImplementedError"""
 
     @abstractmethod
     def landmarks_sentence(self, obs, sce_conf):

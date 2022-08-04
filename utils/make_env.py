@@ -39,12 +39,16 @@ def make_env(args, sce_conf={}, discrete_action=False):
                         done_callback=scenario.done if hasattr(scenario, "done")
                         else None, discrete_action=discrete_action)
 
-    # Get the color and the shape
+    # If world has an attribut objects
     colors = []
     shapes = []
-    for object in env.world.objects :
-            colors.append(object.num_color)
-            shapes.append(object.num_shape)
+    if hasattr(env.world, 'objects'):
+        # Get the color and the shape
+        for object in env.world.objects :
+                colors.append(object.num_color)
+                shapes.append(object.num_shape)
+    else:
+        print('No objects')
 
     # Get parser
     if args.parser == "basic":

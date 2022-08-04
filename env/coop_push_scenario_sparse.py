@@ -313,7 +313,7 @@ class ObservationParserStrat(Parser):
                 
                 #If we are close to landmark
                 elif ( obs[place+2] < 0.2 and  obs[place+2] >= -0.2 and
-                     obs[place+1] < 0.2 and  obs[place+2] >= -0.2):
+                     obs[place+1] < 0.2 and  obs[place+1] >= -0.2):
                     # North / South
                     if  obs[place+2] >= 0:
                         sentence.append("North")
@@ -508,7 +508,7 @@ class ObservationParser(Parser):
                 
                 #If we are close to landmark
                 elif ( obs[place+2] < 0.2 and  obs[place+2] >= -0.2 and
-                     obs[place+1] < 0.2 and  obs[place+2] >= -0.2):
+                     obs[place+1] < 0.2 and  obs[place+1] >= -0.2):
                     # North / South
                     if  obs[place+2] >= 0:
                         sentence.append("North")

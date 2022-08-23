@@ -35,7 +35,7 @@ class ObservationParserStrat(Parser):
     
     vocab = ['Located', 'Object', 'Landmark', 'I', 'You', 'North', 'South', 'East', 'West', 'Center', 'Not', 'Push', 'Search']
 
-    def __init__(self, args, sce_conf, colors, shapes):
+    def __init__(self, args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         self.args = args
         self.directions = []
         for nb_agent in range(sce_conf['nb_agents']):
@@ -397,7 +397,7 @@ class ObservationParserStrat(Parser):
 
         return sentence
 
-    def reset(self, sce_conf, colors, shapes):
+    def reset(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         # Reset the map
         self.map.reset(sce_conf)
 
@@ -405,9 +405,8 @@ class ObservationParserStrat(Parser):
 class ObservationParser(Parser):
     
     vocab = ['Located', 'Object', 'Landmark', 'North', 'South', 'East', 'West', 'Center', 'Not']
-    def __init__(self, args, colors, shapes):
+    def __init__(self, args, obj_colors, obj_shapes, land_colors, land_shapes):
         self.args = args
-        print("DANS L'init")
 
     #Check the position of the agent to see if it is in a corner
     def check_position(self, obs):
@@ -555,7 +554,7 @@ class ObservationParser(Parser):
 
         return sentence
 
-    def reset(self, sce_conf, colors, shapes):
+    def reset(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         # Nothing to reset
         pass
 

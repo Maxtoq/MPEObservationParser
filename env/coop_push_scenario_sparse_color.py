@@ -35,7 +35,7 @@ class ObservationParserStrat(ColorParser):
     
     vocab = ['Located', 'Object', 'Landmark', 'I', 'You', 'North', 'South', 'East', 'West', 'Center', 'Not', 'Push', 'Search', "Red", "Blue", "Yellow", "Green", "Black", "Purple"]
 
-    def __init__(self, args, sce_conf, colors, shapes):
+    def __init__(self, args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         self.args = args
         self.directions = []
         for nb_agent in range(sce_conf['nb_agents']):
@@ -46,7 +46,8 @@ class ObservationParserStrat(ColorParser):
             self.time.append(0)
 
         self.map = ColorMapper(args, sce_conf)
-        self.colors = colors
+        self.obj_colors = obj_colors
+        self.land_colors = land_colors
 
     # Return a random object based on the list of objects
     def select_not_object(self, objects):
@@ -121,24 +122,24 @@ class ObservationParserStrat(ColorParser):
         # We have to check all 3 areas
         if check == "North":
             # Update the object value depending on the objects in the area
-            objects = self.map.check_area(nb_agent, 0, 0, self.colors)
+            objects = self.map.check_area(nb_agent, 0, 0, self.obj_colors)
             # Then we reset the area
             self.map.reset_areas(0, nb_agent)
         elif check == "South":
-            objects = self.map.check_area(nb_agent, 0, 2, self.colors)
+            objects = self.map.check_area(nb_agent, 0, 2, self.obj_colors)
             self.map.reset_areas(1, nb_agent)
         elif check == "West":
-            objects = self.map.check_area(nb_agent, 1, 0, self.colors)
+            objects = self.map.check_area(nb_agent, 1, 0, self.obj_colors)
             self.map.reset_areas(2, nb_agent)
         elif check == "East":
-            objects = self.map.check_area(nb_agent, 1, 2, self.colors)
+            objects = self.map.check_area(nb_agent, 1, 2, self.obj_colors)
             self.map.reset_areas(3, nb_agent)
         elif check == "Center":
             # Always reset the center
-            self.map.reset_areas(4, nb_agent)
+            self.map.reset_areas(4, nb_agent)                
         # If we don't have to check a big area
         else :
-            objects = self.map.find_missing(nb_agent, i, j, self.colors)
+            objects = self.map.find_missing(nb_agent, i, j, self.obj_colors)
 
         # Depending on the objects in the area
         # Creates the not sentence
@@ -216,7 +217,7 @@ class ObservationParserStrat(ColorParser):
                     # 5 values for each agents (not self)
                     spot = spot + (int(sce_conf['nb_agents'])-1)*5 
                     # 5 values for each other objects
-                    spot = spot + object*6
+                    spot = spot + object*8
 
                     # If visible                                      
                     if  obs[spot] == 1 :
@@ -231,7 +232,7 @@ class ObservationParserStrat(ColorParser):
                         
                         # If collision
                         if distance < 0.47:
-                            sentence.extend(["You","Push",self.get_color(obs[spot+5]),"Object"])
+                            sentence.extend(["You","Push",self.array_to_color(obs[spot+5:spot+8]),"Object"])
                             #push = True
                             # Calculate where the object was pushed 
                             # Based on its distance from the agent
@@ -250,6 +251,7 @@ class ObservationParserStrat(ColorParser):
 
         sentence = []
         push = False
+        obj = 0
 
         # Position of the objects
         # For each object 
@@ -258,8 +260,8 @@ class ObservationParserStrat(ColorParser):
             place = 4 # 4 values of the self agent
             # 5 values for each agents (not self)
             place = place + (int(sce_conf['nb_agents'])-1)*5 
-            # 5 values for each other objects
-            place = place + object*6 
+            # 8 values for each other objects
+            place = place + object*8
 
             # If visible                                      
             if  obs[place] == 1 :
@@ -272,8 +274,8 @@ class ObservationParserStrat(ColorParser):
                 object color
                 nb of the agent
                 """
-                self.map.update_area_obj(obs[0], obs[1],2,obs[place+5],nb_agent)
-                sentence.append(self.get_color(obs[place+5]))
+                self.map.update_area_obj(obs[0], obs[1],2,self.obj_colors[obj],nb_agent)
+                sentence.append(self.array_to_color(obs[place+5:place+8]))
                 sentence.append("Object")
                  # North / South
                 if  obs[place+2] >= 0.25:
@@ -296,7 +298,7 @@ class ObservationParserStrat(ColorParser):
 
                 # If collision
                 if distance < 0.47:
-                    sentence.extend(["I","Push",self.get_color(obs[place+5]),"Object"])
+                    sentence.extend(["I","Push",self.array_to_color(obs[place+5:place+8]),"Object"])
                     push = True
                     # Calculate where the object was pushed 
                     # Based on its distance from the agent
@@ -308,12 +310,14 @@ class ObservationParserStrat(ColorParser):
                         sentence.append("East")
                     if  obs[place+1] < -0.20 and  obs[place+1] > -0.50:
                         sentence.append("West")
+            obj += 1
 
         return sentence , push
 
     def landmarks_sentence(self, obs, sce_conf, nb_agent):
 
         sentence = []
+        obj = 0
 
         # Position of the Landmarks
         # For each Landmark 
@@ -322,10 +326,10 @@ class ObservationParserStrat(ColorParser):
             place = 4 # 4 values of the self agent
             # 5 values for each agents (not self)
             place = place + (int(sce_conf['nb_agents'])-1)*5
-            # 5 values for each objects 
-            place = place + int(sce_conf['nb_objects'])*6 
-            # 3 values for each landmark
-            place = place + landmark*4
+            # 8 values for each objects 
+            place = place + int(sce_conf['nb_objects'])*8 
+            # 6 values for each landmark
+            place = place + landmark*6
 
             # If visible
             if  obs[place] == 1 :
@@ -338,8 +342,8 @@ class ObservationParserStrat(ColorParser):
                 object color
                 nb of the agent
                 """
-                self.map.update_area_obj( obs[0], obs[1],3, obs[place+3], nb_agent)
-                sentence.append(self.get_color(obs[place+3]))
+                self.map.update_area_obj( obs[0], obs[1],3, self.land_colors[obj], nb_agent)
+                sentence.append(self.array_to_color(obs[place+3:place+6]))
                 sentence.append("Landmark")
                 
                 # North / South
@@ -368,6 +372,7 @@ class ObservationParserStrat(ColorParser):
                         sentence.append("East")
                     if  obs[place+1] < 0:
                         sentence.append("West")
+            obj += 1
 
         return sentence
 
@@ -440,17 +445,19 @@ class ObservationParserStrat(ColorParser):
 
         return sentence
 
-    def reset(self, sce_conf, colors, shapes):
+    def reset(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         # Reset the map and the colors
         self.map.reset(sce_conf)
-        self.colors = colors
+        self.land_colors = land_colors
+        self.obj_colors = obj_colors
 
 class ObservationParser(ColorParser):
     
     vocab = ['Located', 'Object', 'Landmark', 'North', 'South', 'East', 'West', 'Center', 'Not', "Red", "Blue", "Yellow", "Green", "Black", "Purple"]
-    def __init__(self, args, colors, shapes):
+    def __init__(self, args, obj_colors, obj_shapes, land_colors, land_shapes):
         self.args = args
-        self.colors = colors
+        self.obj_colors = obj_colors
+        self.land_colors = land_colors
 
     #Check the position of the agent to see if it is in a corner
     def check_position(self, obs):
@@ -474,21 +481,27 @@ class ObservationParser(ColorParser):
             place = 4 # 4 values of the self agent
             # 5 values for each agents (not self)
             place = place + (int(sce_conf['nb_agents'])-1)*5 
-            # 5 values for each other objects
-            place = place + object*6 
+            # 8 values for each other objects
+            """ 
+            1: visible or not
+            2: position
+            2: velocity
+            3: color
+            """
+            place = place + object*8 
 
             # If not visible and not sentence
             if obs[place] == 0:
                 if not_sentence == 1 or not_sentence == 3 :
                     # Get the color of the not visible object
-                    not_visible.append(self.colors[obj])
+                    not_visible.append(self.obj_colors[obj])
             else:
                 # Get the color of the visible object
-                visible.append(self.colors[obj])
+                visible.append(self.obj_colors[obj])
 
             # If visible                                      
             if  obs[place] == 1 :
-                sentence.append(self.get_color(obs[place+5]))
+                sentence.append(self.array_to_color(obs[place+5:place+8]))
                 sentence.append("Object")
                  # North / South
                 if  obs[place+2] >= 0.25:
@@ -531,23 +544,28 @@ class ObservationParser(ColorParser):
             place = 4 # 4 values of the self agent
             # 5 values for each agents (not self)
             place = place + (int(sce_conf['nb_agents'])-1)*5
-            # 5 values for each objects 
-            place = place + int(sce_conf['nb_objects'])*6 
-            # 3 values for each landmark
-            place = place + landmark*4
+            # 8 values for each objects 
+            place = place + int(sce_conf['nb_objects'])*8 
+            # 6 values for each landmark
+            """ 
+            1: visible or not
+            2: position
+            3: color
+            """
+            place = place + landmark*6
 
             # If not visible and not sentence
             if obs[place] == 0:
                 if not_sentence == 2 or not_sentence == 3 :
                     # Get the color of the not visible landmark
-                    not_visible.append(self.colors[obj])
+                    not_visible.append(self.land_colors[obj])
             else:
                 # Get the color of the visible landmark
-                visible.append(self.colors[obj])
+                visible.append(self.land_colors[obj])
 
             # If visible
             if  obs[place] == 1 :
-                sentence.append(self.get_color(obs[place+3]))
+                sentence.append(self.array_to_color(obs[place+3:place+6]))
                 sentence.append("Landmark")
                 
                 # North / South
@@ -618,9 +636,10 @@ class ObservationParser(ColorParser):
 
         return sentence
 
-    def reset(self, sce_conf, colors, shapes):
+    def reset(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         # Reset the colors
-        self.colors = colors
+        self.obj_colors = obj_colors
+        self.land_colors = land_colors
 
 # --------- Scenario -----------
 # All entities have a color and a shape
@@ -644,15 +663,6 @@ class Color_Shape_Entity(Entity):
             # Green
             case 3:
                 color = [0.2, 0.78 , 0.35]
-            # Yellow
-            case 4:
-                color = [1, 0.8 , 0]
-            # Purple
-            case 5:
-                color = [0.8, 0.21, 0.98]
-            #Black
-            case 6:
-                color = [0.3, 0.3, 0.3]
 
         return color
 
@@ -668,15 +678,6 @@ class Color_Shape_Entity(Entity):
             # Green
             case [0.2, 0.78 , 0.35]:
                 color = 3
-            # Yellow
-            case [1, 0.8 , 0]:
-                color = 4
-            # Purple
-            case [0.8, 0.21, 0.98]:
-                color = 5
-            #Black
-            case [0.3, 0.3, 0.3]:
-                color = 6
 
         return color
 
@@ -853,7 +854,7 @@ class Scenario(BaseScenario):
         self.nb_objects = nb_objects
         
         # Set list of colors
-        all_colors = [1,2,3,4,5,6]
+        all_colors = [1,2,3]
         colors = []
         # List of objects_name
         objects_name = []
@@ -915,7 +916,7 @@ class Scenario(BaseScenario):
         return self._done_flag
 
     def reset_world(self, world, seed=None, init_pos=None):
-        all_colors = [1,2,3,4,5,6]
+        all_colors = [1,2,3]
         colors = []
         color_count = 3
         if seed is not None:
@@ -1012,13 +1013,6 @@ class Scenario(BaseScenario):
             # Set the minimal distance high
             mini = 10
             for land in world.landmarks:
-                """# Check if the landmark number is the same as the object number
-                o = int(obj.name.split()[-1])
-                l = int(land.name.split()[-1])
-                if o == l:
-                    dists.append(get_dist(obj.state.p_pos, 
-                          land.state.p_pos))
-                    break"""
                 # Find the closest landmark with the same color
                 if obj.num_color == land.num_color:
                     dist = get_dist(obj.state.p_pos, land.state.p_pos)
@@ -1098,6 +1092,9 @@ class Scenario(BaseScenario):
                 else:
                     entity_obs.append(np.zeros(4))
         for entity in world.objects:
+            # Create list of colors for the observation
+            color = [0] * 3
+            color[entity.num_color-1] = 1
             if get_dist(agent.state.p_pos, entity.state.p_pos) <= self.obs_range:
                 # Pos: relative normalised
                 #entity_obs.append(np.concatenate((
@@ -1109,21 +1106,24 @@ class Scenario(BaseScenario):
                         [1.0], # Bit saying entity is observed
                         (entity.state.p_pos - agent.state.p_pos) / self.obs_range, # Relative position normailised into [0, 1]
                         entity.state.p_vel, # Velocity
-                        [entity.num_color]
+                        color
                         # (entity.state.p_pos - agent.state.p_pos), entity.state.p_vel
                     )))
                 # Pos: absolute
                 else:
                     entity_obs.append(np.concatenate((
                         # [1.0], entity.state.p_pos, entity.state.p_vel
-                        entity.state.p_pos, entity.state.p_vel, [entity.num_color]
+                        entity.state.p_pos, entity.state.p_vel, color
                     )))
             else:
                 if self.relative_coord:
-                    entity_obs.append(np.array([0.0, 1.0, 1.0, 0.0, 0.0, 0]))
+                    entity_obs.append(np.array([0.0, 1.0, 1.0, 0.0, 0.0, 0, 0, 0]))
                 else:
-                    entity_obs.append(np.zeros(5))
+                    entity_obs.append(np.zeros(7))
         for entity in world.landmarks:
+            # Create list of colors for the observation
+            color = [0] * 3
+            color[entity.num_color-1] = 1
             if get_dist(agent.state.p_pos, entity.state.p_pos) <= self.obs_range:
                 # Pos: relative normalised
                 #entity_obs.append(np.concatenate((
@@ -1134,7 +1134,7 @@ class Scenario(BaseScenario):
                     entity_obs.append(np.concatenate((
                         [1.0], 
                         (entity.state.p_pos - agent.state.p_pos) / self.obs_range, # Relative position normailised into [0, 1]
-                        [entity.num_color]
+                        color
                     )))
                     # entity_obs.append(
                     #     entity.state.p_pos - agent.state.p_pos
@@ -1144,12 +1144,12 @@ class Scenario(BaseScenario):
                     # entity_obs.append(np.concatenate((
                     #     [1.0], entity.state.p_pos
                     # )))
-                    entity_obs.extend(entity.state.p_pos, entity.num_color)
+                    entity_obs.extend(entity.state.p_pos, color)
             else:
                 if self.relative_coord:
-                    entity_obs.append(np.array([0.0, 1.0, 1.0, 0]))
+                    entity_obs.append(np.array([0.0, 1.0, 1.0, 0, 0, 0]))
                 else:
-                    entity_obs.append(np.zeros(3))
+                    entity_obs.append(np.zeros(5))
 
         # Communication
 

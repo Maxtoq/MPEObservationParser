@@ -36,7 +36,7 @@ class ObservationParserStrat(ColorShapeParser):
     
     vocab = ['Located', 'Object', 'Landmark', 'I', 'You', 'North', 'South', 'East', 'West', 'Center', 'Not', 'Push', 'Search', "Red", "Blue", "Yellow", "Green", "Black", "Purple", "Circle", "Square", "Triangle"]
 
-    def __init__(self, args, sce_conf, colors, shapes):
+    def __init__(self, args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         self.args = args
         self.directions = []
         for nb_agent in range(sce_conf['nb_agents']):
@@ -47,8 +47,10 @@ class ObservationParserStrat(ColorShapeParser):
             self.time.append(0)
 
         self.map = ColorShapeMapper(args, sce_conf)
-        self.colors = colors
-        self.shapes = shapes
+        self.obj_colors = obj_colors
+        self.land_colors = land_colors
+        self.obj_shapes = obj_shapes
+        self.land_shapes = land_shapes
 
     # Return a random object based on the list of objects
     def select_not_object(self, objects):
@@ -430,18 +432,22 @@ class ObservationParserStrat(ColorShapeParser):
 
         return sentence
 
-    def reset(self, sce_conf, colors, shapes):
+    def reset(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         self.map.reset(sce_conf)
-        self.colors = colors
-        self.shapes = shapes
+        self.obj_colors = obj_colors
+        self.land_colors = land_colors
+        self.obj_shapes = obj_shapes
+        self.land_shapes = land_shapes
 
 class ObservationParser(ColorShapeParser):
     
     vocab = ['Located', 'Object', 'Landmark', 'North', 'South', 'East', 'West', 'Center', 'Not', "Red", "Blue", "Yellow", "Green", "Black", "Purple", "Circle", "Square", "Triangle"]
-    def __init__(self, args, colors, shapes):
+    def __init__(self, args, obj_colors, obj_shapes, land_colors, land_shapes):
         self.args = args
-        self.colors = colors
-        self.shapes = shapes
+        self.obj_colors = obj_colors
+        self.land_colors = land_colors
+        self.obj_shapes = obj_shapes
+        self.land_shapes = land_shapes
 
     #Check the position of the agent to see if it is in a corner
     def check_position(self, obs):
@@ -622,10 +628,12 @@ class ObservationParser(ColorShapeParser):
 
         return sentence
 
-    def reset(self, sce_conf, colors, shapes):
+    def reset(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         # Reset the colors and shapes
-        self.colors = colors
-        self.shapes = shapes
+        self.obj_colors = obj_colors
+        self.land_colors = land_colors
+        self.obj_shapes = obj_shapes
+        self.land_shapes = land_shapes
 
 # --------- Scenario -----------
 # All entities have a color and a shape
@@ -1132,6 +1140,9 @@ class Scenario(BaseScenario):
                 else:
                     entity_obs.append(np.zeros(4))
         for entity in world.objects:
+            # Create list of colors for the observation
+            color = [0] * 3
+            color[entity.num_color-1] = 1
             if get_dist(agent.state.p_pos, entity.state.p_pos) <= self.obs_range:
                 # Pos: relative normalised
                 #entity_obs.append(np.concatenate((
@@ -1143,7 +1154,7 @@ class Scenario(BaseScenario):
                         [1.0], # Bit saying entity is observed
                         (entity.state.p_pos - agent.state.p_pos) / self.obs_range, # Relative position normailised into [0, 1]
                         entity.state.p_vel, # Velocity
-                        [entity.num_color],
+                        color,
                         [entity.num_shape]
                         # (entity.state.p_pos - agent.state.p_pos), entity.state.p_vel
                     )))
@@ -1152,7 +1163,7 @@ class Scenario(BaseScenario):
                     entity_obs.append(np.concatenate((
                         # [1.0], entity.state.p_pos, entity.state.p_vel
                         entity.state.p_pos, entity.state.p_vel, 
-                        [entity.num_color], [entity.num_shape]
+                        color, [entity.num_shape]
                     )))
             else:
                 if self.relative_coord:
@@ -1160,6 +1171,9 @@ class Scenario(BaseScenario):
                 else:
                     entity_obs.append(np.zeros(6))
         for entity in world.landmarks:
+            # Create list of colors for the observation
+            color = [0] * 3
+            color[entity.num_color-1] = 1
             if get_dist(agent.state.p_pos, entity.state.p_pos) <= self.obs_range:
                 # Pos: relative normalised
                 #entity_obs.append(np.concatenate((
@@ -1170,7 +1184,7 @@ class Scenario(BaseScenario):
                     entity_obs.append(np.concatenate((
                         [1.0], 
                         (entity.state.p_pos - agent.state.p_pos) / self.obs_range, # Relative position normailised into [0, 1]
-                        [entity.num_color], [entity.num_shape]
+                        color, [entity.num_shape]
                     )))
                     # entity_obs.append(
                     #     entity.state.p_pos - agent.state.p_pos

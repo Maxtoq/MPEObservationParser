@@ -1,5 +1,6 @@
 import random
 from math import sqrt
+import numpy as np
 
 from abc import ABC, abstractmethod
 
@@ -51,7 +52,7 @@ class Parser(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def reset(self, sce_conf, colors, shapes):
+    def reset(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         """
         Returns a sentence generated based on the landmarks see or not by the agent
         """
@@ -80,6 +81,40 @@ class ColorParser(Parser):
             #Black
             case 6:
                 color = "Black"
+
+        return color
+
+    def array_to_color(self, array):
+        # Get the color based on the array
+        idx = np.where(array == 1)[0]
+        color = None
+        match idx:
+            # Red
+            case 0:
+                color = "Red"
+            # Blue
+            case 1:
+                color = "Blue"
+            # Green
+            case 2:
+                color = "Green"
+
+        return color
+
+    def array_to_num(self, array):
+        # Get the color based on the array
+        idx = np.where(array == 1)[0]
+        color = 0
+        match idx:
+            # Red
+            case 0:
+                color = 1
+            # Blue
+            case 1:
+                color = 2
+            # Green
+            case 2:
+                color = 3
 
         return color
         

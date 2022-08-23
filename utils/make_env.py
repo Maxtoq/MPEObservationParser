@@ -40,21 +40,27 @@ def make_env(args, sce_conf={}, discrete_action=False):
                         else None, discrete_action=discrete_action)
 
     # If world has an attribut objects
-    colors = []
-    shapes = []
+    obj_colors = []
+    obj_shapes = []
+    land_colors = []
+    land_shapes = []
     if hasattr(env.world, 'objects'):
         # Get the color and the shape
         for object in env.world.objects :
-                colors.append(object.num_color)
-                shapes.append(object.num_shape)
+                obj_colors.append(object.num_color)
+                obj_shapes.append(object.num_shape)
+        for land in env.world.landmarks :
+                land_colors.append(land.num_color)
+                land_shapes.append(land.num_shape)
+        print(land_colors)
     else:
         print('No objects')
 
     # Get parser
     if args.parser == "basic":
-        parser = scenar_lib.ObservationParser(args, colors, shapes)
+        parser = scenar_lib.ObservationParser(args, obj_colors, obj_shapes, land_colors, land_shapes)
     if args.parser == 'strat':
-        parser = scenar_lib.ObservationParserStrat(args, sce_conf, colors, shapes)
+        parser = scenar_lib.ObservationParserStrat(args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes)
 
     return env, parser
 

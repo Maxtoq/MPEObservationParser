@@ -65,15 +65,22 @@ def run(args):
         obs = env.reset(init_pos=init_pos_scenar)
 
         # Get the colors and the shapes of the episode
-        colors = []
-        shapes = []
+        obj_colors = []
+        obj_shapes = []
+        land_colors = []
+        land_shapes = []
         if hasattr(env.world, 'objects'):
+           # Get the color and the shape
             for object in env.world.objects :
-                    colors.append(object.num_color)
-                    shapes.append(object.num_shape)
+                obj_colors.append(object.num_color)
+                obj_shapes.append(object.num_shape)
+            for land in env.world.landmarks :
+                land_colors.append(land.num_color)
+                land_shapes.append(land.num_shape)
+            print(land_colors)
 
         #observation.reset(sce_conf, colors, shapes)
-        parser.reset(sce_conf, colors, shapes)
+        parser.reset(sce_conf, obj_colors, obj_shapes, land_colors, land_shapes)
         for step_i in range(args.episode_length):
             print("Step", step_i)
             print("Observations:", obs)
@@ -135,9 +142,9 @@ def run(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Scenario
-    parser.add_argument("--env_path", default="env/simple_spread.py",
+    parser.add_argument("--env_path", default="env/coop_push_scenario_sparse_color.py",
                         help="Path to the environment")
-    parser.add_argument("--sce_conf_path", default="configs/simple_spread_3a.json", 
+    parser.add_argument("--sce_conf_path", default="configs/2a_3o_po_rel.json", 
                         type=str, help="Path to the scenario config file")
     parser.add_argument("--sce_init_pos", default=None, 
                         type=str, help="Path to initial positions config file")

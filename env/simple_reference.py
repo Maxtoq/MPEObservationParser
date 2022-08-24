@@ -21,10 +21,10 @@ LANDMARK_COLORS = [
 class ObservationParser(Parser):
     
     vocab = ['Located', 'Object', 'Landmark', 'North', 'South', 'East', 'West', 'Center', 'Not', "Red", "Blue", "Yellow", "Green", "Black", "Purple", "Circle", "Square", "Triangle"]
-    def __init__(self, args, colors, shapes):
+    def __init__(self, args, obj_colors, obj_shapes, land_colors, land_shapes):
         self.args = args
-        self.colors = colors
-        self.shapes = shapes
+        """self.colors = colors
+        self.shapes = shapes"""
 
     #Check the position of the agent to see if it is in a corner
     def check_position(self, obs):
@@ -171,10 +171,11 @@ class ObservationParser(Parser):
 
         return sentence
 
-    def reset(self, sce_conf, colors, shapes):
+    def reset(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         # Reset the colors and shapes
-        self.colors = colors
-        self.shapes = shapes
+        """self.colors = colors
+        self.shapes = shapes"""
+        pass
 
 
 class Color_Shape_Entity(Entity):

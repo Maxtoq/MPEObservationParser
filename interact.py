@@ -142,7 +142,7 @@ def run(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Scenario
-    parser.add_argument("--env_path", default="env/coop_push_scenario_sparse_color.py",
+    parser.add_argument("--env_path", default="env/coop_push_scenario_sparse_color_shape.py",
                         help="Path to the environment")
     parser.add_argument("--sce_conf_path", default="configs/2a_3o_po_rel.json", 
                         type=str, help="Path to the scenario config file")

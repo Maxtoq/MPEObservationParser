@@ -216,7 +216,7 @@ class ObservationParserStrat(ColorParser):
                     spot = 4 # 4 values of the self agent
                     # 5 values for each agents (not self)
                     spot = spot + (int(sce_conf['nb_agents'])-1)*5 
-                    # 5 values for each other objects
+                    # 8 values for each other objects
                     spot = spot + object*8
 
                     # If visible                                      

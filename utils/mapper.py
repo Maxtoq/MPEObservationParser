@@ -826,3 +826,25 @@ class ColorShapeMapper(ColorMapper):
                         list_all_obj.remove(obj)
 
         return list_all_obj
+
+    # A MODIFIER
+    # Return list of object not visible
+    def find_missing(self, nb_agent, posx, posy, all_colors, all_shapes):
+        list_obj = []
+        list_all_obj = []
+        objects_not_visible = []
+        print("COLORS AVAILABLE")
+        print(all_colors)
+        # Create a list with all the possible objects
+        # Each color has an object and a landmark
+        for c in all_colors:
+            if [2,c] not in list_all_obj and [3,c] not in list_all_obj:
+                list_all_obj.append([2,c])
+                list_all_obj.append([3,c])
+        
+        list_obj = copy.copy(self.area_object[nb_agent][posx][posy])
+        list_obj.pop(0)
+        for obj in list_all_obj:
+            if obj not in list_obj and obj not in objects_not_visible:
+                objects_not_visible.append(obj)
+        return objects_not_visible

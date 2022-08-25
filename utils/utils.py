@@ -5,7 +5,21 @@ import time
 import json
 
 # Save the sentences, actions and observations of the exercise as well as the analysis
-def save(sce_conf, sentences, observations, actions):
+def save(nb_agent, sentences, observations, actions):
+    '''
+    Save the data of the training (sentences, observations and actions) 
+    in a json file. 
+    Also calling the save_analysis() that will check if the user wants to save the analysis
+
+    Input:
+        nb_agents     :   number of agents in the environment
+        sentences     :   all the sentences generated during the training
+        observations  :   all observations generated during the training
+        actions       :   every actions taken by the agents
+
+    Output:
+        Sentences_Generated.json
+    '''
     print("save pending")
     # Create a dictionnary out of the two variables
     dic = {}
@@ -17,9 +31,9 @@ def save(sce_conf, sentences, observations, actions):
         dic['Step ' + str(i)] = {}
         # Add the state
         dic['Step ' + str(i)]['State'] = {}
-        # For each agent
         
-        for nb in range(sce_conf["nb_agents"]):
+        # For each agent
+        for nb in range(nb_agent):
             agent_name = 'Agent_' + str(nb)
             # Add the observation of the agent
             dic['Step ' + str(i)][agent_name] = {}
@@ -45,7 +59,15 @@ def save(sce_conf, sentences, observations, actions):
 
 # Check the execution time of the program
 def execution_time(args):
+    '''
+    Check the execution_time of the training depending on the number
+    of episodes and the parser
 
+    Output:
+        Print:  The total execution time
+                The execution time per episode
+                The execution time per step
+    '''
     # Load scenario config
     sce_conf = {}
     if args.sce_conf_path is not None:
@@ -65,7 +87,7 @@ def execution_time(args):
     else:
         init_pos_scenar = None
 
-
+    # The mouvement of the agents is randomised 
     actor = RandomActor(sce_conf["nb_agents"])
 
     # Save all the sentences generated
@@ -79,6 +101,7 @@ def execution_time(args):
     t0 = time.time()
     
     for ep_i in range(args.n_episodes):
+        # Reset the observation
         obs = env.reset(init_pos=init_pos_scenar)
 
         # Get the colors and the shapes of the episode
@@ -88,6 +111,7 @@ def execution_time(args):
                 colors.append(object.num_color)
                 shapes.append(object.num_shape)
                 
+        # For each step
         for step_i in range(args.episode_length):
             # Get action
             actions = actor.get_action()
@@ -102,7 +126,7 @@ def execution_time(args):
                 if args.parser == 'strat':
                     sentence = parser.parse_obs(obs[agent],sce_conf, agent)
                 sentences[agent].append(sentence)
-
+            # Append the observation and the action of the step
             observations.append(obs)
             action_list.append(actions)
 

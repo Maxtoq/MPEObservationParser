@@ -137,7 +137,7 @@ def run(args):
     print("Press S to save")
     print("Press any key to quit")
     if keyboard.read_key() == "s":
-        save(sce_conf,sentences,observations,action_list)
+        save(sce_conf['nb_agents'],sentences,observations,action_list)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -161,5 +161,4 @@ if __name__ == "__main__":
     parser.add_argument("--actors", default="random", type=str, help="Available actors are 'random' or 'manual'")
 
     args = parser.parse_args()
-
     run(args)

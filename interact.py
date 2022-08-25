@@ -93,7 +93,7 @@ def run(args):
                 print(agent)
                 # Call the right parser
                 if args.parser == "basic":
-                    sentence = parser.parse_obs(obs[agent],sce_conf)
+                    sentence = parser.parse_obs(obs[agent])
                 if args.parser == 'strat':
                     sentence = parser.parse_obs(obs[agent],sce_conf, agent)
                 print(sentence)

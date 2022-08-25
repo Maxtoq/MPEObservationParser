@@ -58,7 +58,7 @@ def make_env(args, sce_conf={}, discrete_action=False):
 
     # Get parser
     if args.parser == "basic":
-        parser = scenar_lib.ObservationParser(args, obj_colors, obj_shapes, land_colors, land_shapes)
+        parser = scenar_lib.ObservationParser(args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes)
     if args.parser == 'strat':
         parser = scenar_lib.ObservationParserStrat(args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes)
 

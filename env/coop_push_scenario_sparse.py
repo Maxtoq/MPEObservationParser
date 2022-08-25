@@ -29,7 +29,7 @@ def obj_callback(agent, world):
     action.c = np.zeros((world.dim_c))
     return action
 
-# --------- Parser--------- 
+# --------- Parser --------- 
 # Strat parser
 class ObservationParserStrat(Parser):
     
@@ -48,9 +48,6 @@ class ObservationParserStrat(Parser):
         self.map = Mapper(args, sce_conf)
 
     def not_sentence(self, i, j, nb_agent):
-        """print("------------------------- NOT SENTENCE -------------------------")
-        print(self.map.area[nb_agent])
-        print(self.map.area_obj)"""
         # Position of the agent
         position = []
         # Part of the sentence generated
@@ -389,7 +386,7 @@ class ObservationParserStrat(Parser):
 
         # Update the world variable to see what the agent
         # Has discovered (to generate not sentences)
-        self.map.update_world( obs[0], obs[1], nb_agent)
+        self.map.update_world(obs[0], obs[1], nb_agent)
         temp = self.map.update_area(nb_agent)
         if temp != None:
             not_sent = self.not_sentence(temp[0], temp[1], temp[2])
@@ -405,152 +402,193 @@ class ObservationParserStrat(Parser):
 class ObservationParser(Parser):
     
     vocab = ['Located', 'Object', 'Landmark', 'North', 'South', 'East', 'West', 'Center', 'Not']
-    def __init__(self, args, obj_colors, obj_shapes, land_colors, land_shapes):
+    def __init__(self, args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
         self.args = args
+        self.nb_agents = sce_conf['nb_agents']
+        self.nb_objects = sce_conf['nb_objects']
 
-    #Check the position of the agent to see if it is in a corner
-    def check_position(self, obs):
-        if ( obs[0] >= 0.5 and ( obs[1] >=0.5 or  obs[1] <= -0.5) or
-             obs[0] <= -0.5 and ( obs[1] >=0.5 or  obs[1] <= -0.5)):
-            return True
-        else:
-            return False
+    # Generate a sentence for the object
+    def object_sentence(self, obs):
+        '''
+        Will generate a sentence if the agent sees the object
 
-    def objects_sentence(self, obs, sce_conf, not_sentence, position):
+        Input:  The observation from the agent of this object
 
+        Output: A sentence based on what it sees
+        '''
         sentence = []
-        not_visible = []
 
-        # Position of the objects
-        # For each object 
-        for object in range(int(sce_conf['nb_objects'])):
-        # Calculate the place in the array
-            place = 4 # 4 values of the self agent
-            # 5 values for each agents (not self)
-            place = place + (int(sce_conf['nb_agents'])-1)*5 
-            # 5 values for each other objects
-            place = place + object*5 
-
-            # If not visible and not sentence
-            if ((not_sentence == 1 or not_sentence == 3) 
-                and  obs[place] == 0):
-                    not_visible.append(place)
-
-            # If visible                                      
-            if  obs[place] == 1 :
-                sentence.append("Object")
-                 # North / South
-                if  obs[place+2] >= 0.25:
-                    sentence.append("North")
-                if  obs[place+2] < -0.25:
-                    sentence.append("South")
-                
-                # West / East
-                if  obs[place+1] >= 0.25:
-                    sentence.append("East")
-                if  obs[place+1] < -0.25:
-                    sentence.append("West")
-
-        if len(not_visible) != 0:
-            not_visible = random.choice(not_visible)
-            sentence.extend(["Object","Not"])
-            for word in position:
-                sentence.append(word)
+        # If visible                                      
+        if  obs[0] == 1 :
+            sentence.append("Object")
+            # North / South
+            if  obs[2] >= 0.25:
+                sentence.append("North")
+            elif  obs[2] < -0.25:
+                sentence.append("South")
+            
+            # West / East
+            if  obs[1] >= 0.25:
+                sentence.append("East")
+            elif  obs[1] < -0.25:
+                sentence.append("West")
 
         return sentence
 
-    def landmarks_sentence(self, obs, sce_conf, not_sentence, position):
+     # Generate a sentence for the landmark
+    def landmark_sentence(self, obs):
+        '''
+        Will generate a sentence if the agent sees the object
 
+        Input:  The observation from the agent of this object
+
+        Output: A sentence based on what it sees
+        '''
         sentence = []
-        not_visible = []
+        # Variable to check if we are close to the landmark
+        # = True until we check its position
+        close = True
 
-        # Position of the Landmarks
-        # For each Landmark 
-        for landmark in range(int(sce_conf['nb_objects'])):
-        #Calculate the place in the array
-            place = 4 # 4 values of the self agent
-            # 5 values for each agents (not self)
-            place = place + (int(sce_conf['nb_agents'])-1)*5
-            # 5 values for each objects 
-            place = place + int(sce_conf['nb_objects'])*5 
-            # 3 values for each landmark
-            place = place + landmark*3
+        # If visible
+        if  obs[0] == 1 :
+            sentence.append("Landmark")
+            
+            # North / South
+            if  obs[2] >= 0.2:
+                sentence.append("North")
+                close = False
+            elif  obs[2] < -0.2:
+                sentence.append("South")
+                close = False
 
-            """# If not visible and not sentence
-            if ((not_sentence == 2 or not_sentence == 3) 
-                and  obs[place] == 0):
-                #if self.check_position(obs):
-                    # [1] and [2] are the positions of the agent
-                    sentence.extend(["Landmark","Not"])
-                    for word in position:
-                        sentence.append(word)"""
-
-            if ((not_sentence == 2 or not_sentence == 3) 
-                and  obs[place] == 0):
-                    not_visible.append(place)
-
-            # If visible
-            if  obs[place] == 1 :
-                sentence.append("Landmark")
-                
+            # West / East
+            if  obs[1] >= 0.2:
+                sentence.append("East")
+                close = False
+            elif  obs[1] < -0.2:
+                sentence.append("West")
+                close = False
+            
+            #If we are close to landmark
+            if close:
                 # North / South
-                if  obs[place+2] >= 0.2:
+                if  obs[2] >= 0:
                     sentence.append("North")
-                if  obs[place+2] < -0.2:
+                if  obs[2] < 0:
                     sentence.append("South")
                     
                 # West / East
-                if  obs[place+1] >= 0.2:
+                if  obs[1] >= 0:
                     sentence.append("East")
-                if  obs[place+1] < -0.2:
+                if  obs[1] < 0:
                     sentence.append("West")
-                
-                #If we are close to landmark
-                elif ( obs[place+2] < 0.2 and  obs[place+2] >= -0.2 and
-                     obs[place+1] < 0.2 and  obs[place+1] >= -0.2):
-                    # North / South
-                    if  obs[place+2] >= 0:
-                        sentence.append("North")
-                    if  obs[place+2] < 0:
-                        sentence.append("South")
-                        
-                    # West / East
-                    if  obs[place+1] >= 0:
-                        sentence.append("East")
-                    if  obs[place+1] < 0:
-                        sentence.append("West")
-
-        if len(not_visible) != 0:
-            not_visible = random.choice(not_visible)
-            sentence.extend(["Landmark","Not"])
-            for word in position:
-                sentence.append(word)
 
         return sentence
 
-    def parse_obs(self, obs, sce_conf):
+    # Might generate a not sentence
+    def not_sentence(self, position, no_objects, no_landmarks):
+        '''
+        Might Create a "Not sentence" if the agent don't see 1 
+        or more types of object
+
+        Input:  
+            position: The position of the agent
+            no_objects: True or False if we see an object
+            no_landmarks: True or False if we see a landmark
+
+        Output: A sentence based on what it doesn't see
+        '''
+        sentence = []
+
+        #Generation of a NOT sentence ?
+        """
+        if = 1: Will generate not_sentence only for objects
+        if = 2: Will generate not_sentence only for landmarks
+        if = 3: Will generate not_sentence for both objects and landmarks
+        """
+        not_sentence = 0
+        # We don't always generate not sentence
+        if random.random() <= self.args.chance_not_sent:
+            not_sentence = random.randint(1,3)
+
+            if not_sentence == 1 and no_objects:
+                # Object not sentence
+                sentence.extend(["Object","Not"])
+                for word in position:
+                    sentence.append(word)
+            elif not_sentence == 2 and no_landmarks:
+                # Landmark not sentence
+                sentence.extend(["Landmark","Not"])
+                for word in position:
+                    sentence.append(word)
+            elif not_sentence == 3:
+                # Both object
+                if no_objects:
+                    sentence.extend(["Object","Not"])
+                    for word in position:
+                        sentence.append(word)
+                if no_landmarks:
+                    sentence.extend(["Landmark","Not"])
+                    for word in position:
+                        sentence.append(word)
+
+        return sentence
+
+    def parse_obs(self, obs):
         # Sentence generated
         sentence = []
         # Position of the agent
         position = []
 
-        #Generation of a NOT sentence ?
-        not_sentence = 0
-        if random.random() <= self.args.chance_not_sent:
-            not_sentence = random.randint(1,3)
-
         # Get the position of the agent
-        sentence.extend(self.position_agent(obs))
+        sentence.extend(self.position_agent(obs[0:2]))
         for i in range(1,len(sentence)):
             position.append(sentence[i])
+
+        # Will calculate the place in the array of each entity
+        # There are 4 values for the main agent
+        """
+        2: position
+        2: velocity
+        """
+        place = 4
+
+        # Add the values of the other agents
+        """
+        1: visible or not
+        2: position
+        2: velocity
+        """
+        for agent_i in range(self.nb_agents - 1):
+            place = place + 5
         
         # Objects sentence
-        sentence.extend(self.objects_sentence(obs, sce_conf, \
-                        not_sentence, position))
-        
-        # Landmark sentence
-        sentence.extend(self.landmarks_sentence(obs, sce_conf, \
-                        not_sentence, position))
+        """
+        1: visible or not
+        2: position
+        2: velocity
+        """
+        objects_sentence = []
+        for object in range(self.nb_objects):
+            objects_sentence.extend(self.object_sentence(obs[place:place+3]))
+            place = place + 5
+        no_objects = len(objects_sentence) == 0  
+        sentence.extend(objects_sentence)
+
+        # Landmarks sentence
+        """
+        1: visible or not
+        2: position
+        """
+        landmarks_sentence = []
+        for landmark in range(self.nb_objects):
+            landmarks_sentence.extend(self.landmark_sentence(obs[place:place+3]))
+            place = place + 3
+        no_landmarks = len(landmarks_sentence) == 0
+        sentence.extend(landmarks_sentence)
+
+        # Not sentence
+        sentence.extend(self.not_sentence(position, no_objects, no_landmarks))
 
         return sentence
 

@@ -63,10 +63,9 @@ def execution_time(args):
     Check the execution_time of the training depending on the number
     of episodes and the parser
 
-    Output:
-        Print:  The total execution time
-                The execution time per episode
-                The execution time per step
+    Print:  The total execution time
+            The execution time per episode
+            The execution time per step
     '''
     # Load scenario config
     sce_conf = {}

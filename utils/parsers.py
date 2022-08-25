@@ -44,12 +44,12 @@ class Parser(ABC):
         
         raise NotImplementedError"""
 
-    @abstractmethod
+    """@abstractmethod
     def landmarks_sentence(self, obs, sce_conf):
-        """
+        
         Returns a sentence generated based on the landmarks see or not by the agent
-        """
-        raise NotImplementedError
+        
+        raise NotImplementedError"""
 
     @abstractmethod
     def reset(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):

@@ -122,7 +122,7 @@ def execution_time(args):
                 # Call the right parser
                 if args.parser == "basic":
                     sentence = parser.parse_obs(obs[agent],sce_conf)
-                if args.parser == 'strat':
+                elif args.parser == 'strat':
                     sentence = parser.parse_obs(obs[agent],sce_conf, agent)
                 sentences[agent].append(sentence)
             # Append the observation and the action of the step

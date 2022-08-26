@@ -14,6 +14,10 @@ class RenderMultiAgent(MultiAgentEnv):
 
     # render environment
     def render(self, range1, range2, mode='human'):
+        """
+        range1 : If True print the range of the agent1
+        range2 : If True print the range of the agent2
+        """
         if mode == 'human':
             alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
             message = ''

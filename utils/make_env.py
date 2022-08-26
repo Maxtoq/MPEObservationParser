@@ -1,9 +1,5 @@
-import numpy as np
 import json
 import imp
-import os
-import re
-from pathlib import Path
 from shutil import copyfile
 
 def make_env(args, sce_conf={}, discrete_action=False):
@@ -52,14 +48,11 @@ def make_env(args, sce_conf={}, discrete_action=False):
         for land in env.world.landmarks :
                 land_colors.append(land.num_color)
                 land_shapes.append(land.num_shape)
-        print(land_colors)
-    else:
-        print('No objects')
 
     # Get parser
     if args.parser == "basic":
         parser = scenar_lib.ObservationParser(args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes)
-    if args.parser == 'strat':
+    elif args.parser == 'strat':
         parser = scenar_lib.ObservationParserStrat(args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes)
 
     return env, parser

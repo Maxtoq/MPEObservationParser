@@ -42,12 +42,13 @@ def run(args):
         print("ERROR : Pick correct actors (random or manual)")
         exit(0)
     
+
+    # -------------- UTILE ? ----------
     # Get the color and shape if needed
     colors = []
     shapes = []    
 
     # Save all the sentences generated
-    #sentences = [[],[]]
     sentences = []
     for nb_agent in range(sce_conf['nb_agents']):
         newAgent = []
@@ -77,10 +78,8 @@ def run(args):
             for land in env.world.landmarks :
                 land_colors.append(land.num_color)
                 land_shapes.append(land.num_shape)
-            print(land_colors)
 
-        #observation.reset(sce_conf, colors, shapes)
-        parser.reset(sce_conf, obj_colors, obj_shapes, land_colors, land_shapes)
+        parser.reset(obj_colors, obj_shapes, land_colors, land_shapes)
         for step_i in range(args.episode_length):
             print("Step", step_i)
             print("Observations:", obs)
@@ -90,12 +89,12 @@ def run(args):
             print("Rewards:", rewards)
             # Get sentence of the agents
             for agent in range(sce_conf["nb_agents"]):
-                print(agent)
+                print("Agent " + str(agent) + ":")
                 # Call the right parser
                 if args.parser == "basic":
                     sentence = parser.parse_obs(obs[agent])
-                if args.parser == 'strat':
-                    sentence = parser.parse_obs(obs[agent],sce_conf, agent)
+                elif args.parser == 'strat':
+                    sentence = parser.parse_obs(obs[agent], agent)
                 print(sentence)
                 sentences[agent].append(sentence)
 
@@ -111,17 +110,7 @@ def run(args):
             if dones[0]:
                 break
             obs = next_obs
-
-                                                                        # ----------------- SOUS PROG ?? ----------------------- #
-
-    # If we didn't already delete the Start and End tokens
-    """if sentences[0][0][0] == '<SOS>':
-        for i in range(2):
-            for sentence in sentences[i]:
-                # We delete first and last character
-                sentence.pop(0)
-                sentence.pop()"""
-                    
+       
     # Analysis of the sentences generated
     print("Would you like to see the analysis ?")
     print("Press A to see the analysis")
@@ -142,7 +131,7 @@ def run(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Scenario
-    parser.add_argument("--env_path", default="env/coop_push_scenario_sparse_color_shape.py",
+    parser.add_argument("--env_path", default="env/coop_push_scenario_sparse.py",
                         help="Path to the environment")
     parser.add_argument("--sce_conf_path", default="configs/2a_3o_po_rel.json", 
                         type=str, help="Path to the scenario config file")

@@ -23,8 +23,6 @@ class ObservationParser(Parser):
     vocab = ['Located', 'Object', 'Landmark', 'North', 'South', 'East', 'West', 'Center', 'Not', "Red", "Blue", "Yellow", "Green", "Black", "Purple", "Circle", "Square", "Triangle"]
     def __init__(self, args, obj_colors, obj_shapes, land_colors, land_shapes):
         self.args = args
-        """self.colors = colors
-        self.shapes = shapes"""
 
     #Check the position of the agent to see if it is in a corner
     def check_position(self, obs):
@@ -177,7 +175,7 @@ class ObservationParser(Parser):
         self.shapes = shapes"""
         pass
 
-
+# All entities have a color and a shape
 class Color_Shape_Entity(Entity):
     def __init__(self):
         super(Color_Shape_Entity, self).__init__()
@@ -188,79 +186,57 @@ class Color_Shape_Entity(Entity):
 
     # Get the color based on the number
     def num_to_color(self, color):
-        match color:
-            # Red
-            case 1:
-                color = [1, 0.22745, 0.18431]
-            # Blue
-            case 2:
-                color = [0, 0.38, 1]
-            # Green
-            case 3:
-                color = [0.2, 0.78 , 0.35]
-            # Yellow
-            case 4:
-                color = [1, 0.8 , 0]
-            # Purple
-            case 5:
-                color = [0.8, 0.21, 0.98]
-            #Black
-            case 6:
-                color = [0.3, 0.3, 0.3]
+        # Red
+        if color == 1:
+            color = [1, 0.22745, 0.18431]
+        # Blue
+        elif color == 2:
+            color = [0, 0.38, 1]
+        # Green
+        elif color == 3:
+            color = [0.2, 0.78 , 0.35]
 
         return color
 
     # Get the color based on the number
     def color_to_num(self, color):
-        match color:
-            # Red
-            case [1, 0.22745, 0.18431]:
-                color = 1
-            # Blue
-            case [0, 0.38, 1]:
-                color = 2
-            # Green
-            case [0.2, 0.78 , 0.35]:
-                color = 3
-            # Yellow
-            case [1, 0.8 , 0]:
-                color = 4
-            # Purple
-            case [0.8, 0.21, 0.98]:
-                color = 5
-            #Black
-            case [0.3, 0.3, 0.3]:
-                color = 6
+        # Red
+        if color == [1, 0.22745, 0.18431]:
+            color = 1
+        # Blue
+        elif color == [0, 0.38, 1]:
+            color = 2
+        # Green
+        elif color == [0.2, 0.78 , 0.35]:
+            color = 3
 
         return color
 
     # Get the color based on the number
     def num_to_shape(self, shape):
-        match shape:
-            # Circle
-            case 1:
-                shape = "circle"
-            # Square
-            case 2:
-                shape = "square"
-            # Triangle
-            case 3:
-                shape = "triangle"
+        # Circle
+        if shape == 1:
+            shape = "circle"
+        # Square
+        elif shape == 2:
+            shape = "square"
+        # Triangle
+        elif shape == 3:
+            shape = "triangle"
 
         return shape
 
     # Get the color based on the number
     def shape_to_num(self, shape):
-        match shape:
-            #Black
-            case "circle":
-                shape = 1
-            # Red
-            case "square":
-                shape = 2
-            # Blue
-            case "triangle":
-                shape = 3
+        #Black
+        if shape == "circle":
+            shape = 1
+        # Red
+        elif shape == "square":
+            shape = 2
+        # Blue
+        elif shape == "triangle":
+            shape = 3
 
         return shape
 

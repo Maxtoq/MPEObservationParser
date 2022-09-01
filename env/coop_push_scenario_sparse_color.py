@@ -35,8 +35,17 @@ class ObservationParserStrat(ColorParser):
     
     vocab = ['Located', 'Object', 'Landmark', 'I', 'You', 'North', 'South', 'East', 'West', 'Center', 'Not', 'Push', 'Search', "Red", "Blue", "Yellow", "Green", "Black", "Purple"]
 
-    def __init__(self, args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
-        self.args = args
+    def __init__(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
+        """
+        ObservationParserStrat, generate sentences for the agents and share actions
+        :param sce_conf: (dict) information on the scenario
+        obj_colors: list(int) all the colors of the objects
+        obj_shapes: list(int) all the shapes of the objects
+        land_colors: list(int) all the colors of the landmarks
+        land_shapes: list(int) all the shapes of the landmarks
+        """
+        self.nb_agents = sce_conf['nb_agents']
+        self.nb_objects = sce_conf['nb_objects']
         self.directions = []
         for nb_agent in range(sce_conf['nb_agents']):
             newAgent = []
@@ -45,12 +54,20 @@ class ObservationParserStrat(ColorParser):
         for nb_agent in range(sce_conf['nb_agents']):
             self.time.append(0)
 
-        self.map = ColorMapper(args, sce_conf)
+        self.map = ColorMapper(sce_conf)
         self.obj_colors = obj_colors
         self.land_colors = land_colors
 
     # Return a random object based on the list of objects
     def select_not_object(self, objects):
+        '''
+        Return an object based on the list of objects
+
+        Input:  
+            objects:    list(list(int)) list of objects
+
+        Output: list(int) one of the object
+        '''
         list_obj = []
         list_land = []
         list = []
@@ -82,7 +99,18 @@ class ObservationParserStrat(ColorParser):
 
         return list
 
+    # Generate a not sentence depending on what the agent saw
     def not_sentence(self, i, j, nb_agent):
+        '''
+        Might Create a "Not sentence" if the agent don't see 1 
+        or more types of object
+
+        Input:  
+            i and j:    (int) area_nb to check i could be refered as x and j as y
+            nb_agent:   (int) nb of the agent
+
+        Output: A sentence based on what it didn't see
+        '''
         # Position of the agent
         position = []
         # Part of the sentence generated
@@ -150,7 +178,34 @@ class ObservationParserStrat(ColorParser):
 
         return n_sent 
 
-    def update_direction(self, direction, nb_agent):
+    # Update the agents's direction
+    def update_direction(self, obs, nb_agent):
+        '''
+        Check if the current direction is the same as before 
+        And return True if the agent has been going in the same direction
+        for a long time (here more than 2 steps)
+
+        Input:  
+            obs: list(float) The position of the agent
+                             (2 values for position, 2 values for velocity)
+            nb_agent: (int) number of the agent
+
+        Output: True or False
+        '''
+
+        direction = []
+
+        # Search
+        # Set the direction vector depending on the direction of the agent 
+        if  obs[3] > 0.5:
+            direction.append("North")
+        if  obs[3] < -0.5:
+            direction.append("South")
+        if  obs[2] > 0.5:
+            direction.append("East")
+        if  obs[2] < -0.5:
+            direction.append("West")
+
         # Check if the current direction of the agent
         # Is the same as the old direction
         if self.directions[nb_agent] == direction:
@@ -167,229 +222,24 @@ class ObservationParserStrat(ColorParser):
         else:
             return False
 
-    def agents_sentence(self, obs, sce_conf):
-
-        sentence = []
-
-        # Position of the agent
-        # For each agents 
-        for agent in range(int(sce_conf['nb_agents'])-1):
-        # Calculate the place in the array
-            place = 4 # 4 values of the self agent
-            # 5 values for each agents 
-            place = place + agent*5 
-
-            # If visible                                      
-            if  obs[place] == 1 :
-
-                # Position
-                sentence.append("You")
-                collision = True
-                 # North / South
-                if  obs[place+2] >= 0.15:
-                    sentence.append("North")
-                    collision = False
-                if  obs[place+2] < -0.15:
-                    sentence.append("South")
-                    collision = False
-                
-                # West / East
-                if  obs[place+1] >= 0.15:
-                    sentence.append("East")
-                    collision = False
-                if  obs[place+1] < -0.15:
-                    sentence.append("West")
-                    collision = False
-                # If collision with self
-                # Don't print anything about the position
-                if collision :
-                    sentence.pop()
-
-
-                # Is it pushing an object
-                for object in range(int(sce_conf['nb_objects'])):
-                    # Calculate the place in the array
-                    spot = 4 # 4 values of the self agent
-                    # 5 values for each agents (not self)
-                    spot = spot + (int(sce_conf['nb_agents'])-1)*5 
-                    # 8 values for each other objects
-                    spot = spot + object*8
-
-                    # If visible                                      
-                    if  obs[spot] == 1 :
-
-                        # Is it pushing ?
-                        # Calculate the distance of the center 
-                        # Of the object from the agent
-                        x =  obs[place+1] -  obs[spot+1]
-                        y =  obs[place+2] -  obs[spot+2]
-                        distance = x*x + y*y
-                        distance = sqrt(distance)
-                        
-                        # If collision
-                        if distance < 0.47:
-                            sentence.extend(["You","Push",self.array_to_color(obs[spot+5:spot+8]),"Object"])
-                            #push = True
-                            # Calculate where the object was pushed 
-                            # Based on its distance from the agent
-                            if y > 0.20 and y < 0.50 :
-                                sentence.append("South")
-                            if y < -0.20 and y > -0.50 :
-                                sentence.append("North")
-                            if x > 0.20 and x < 0.50 :
-                                sentence.append("West")
-                            if x < -0.20 and x > -0.50:
-                                sentence.append("East")
-                
-        return sentence
-
-    def objects_sentence(self, obs, sce_conf, nb_agent):
-
-        sentence = []
-        push = False
-        obj = 0
-
-        # Position of the objects
-        # For each object 
-        for object in range(int(sce_conf['nb_objects'])):
-        # Calculate the place in the array
-            place = 4 # 4 values of the self agent
-            # 5 values for each agents (not self)
-            place = place + (int(sce_conf['nb_agents'])-1)*5 
-            # 8 values for each other objects
-            place = place + object*8
-
-            # If visible                                      
-            if  obs[place] == 1 :
-
-                #We update the area_obj
-                """
-                obs[0] pos x of the agent
-                obs[1] pos y of the agent
-                object type : 2
-                object color
-                nb of the agent
-                """
-                self.map.update_area_obj(obs[0], obs[1],2,self.obj_colors[obj],nb_agent)
-                sentence.append(self.array_to_color(obs[place+5:place+8]))
-                sentence.append("Object")
-                 # North / South
-                if  obs[place+2] >= 0.25:
-                    sentence.append("North")
-                if  obs[place+2] < -0.25:
-                    sentence.append("South")
-                
-                # West / East
-                if  obs[place+1] >= 0.25:
-                    sentence.append("East")
-                if  obs[place+1] < -0.25:
-                    sentence.append("West")
-
-                # Calculate the distance of the center 
-                # Of the object from the agent
-                distance =  obs[place+1]* obs[place+1] + \
-                     obs[place+2]* obs[place+2]
-                distance = sqrt(distance)
-    
-
-                # If collision
-                if distance < 0.47:
-                    sentence.extend(["I","Push",self.array_to_color(obs[place+5:place+8]),"Object"])
-                    push = True
-                    # Calculate where the object was pushed 
-                    # Based on its distance from the agent
-                    if  obs[place+2] > 0.20 and  obs[place+2] < 0.50 :
-                        sentence.append("North")
-                    if  obs[place+2] < -0.20 and  obs[place+2] > -0.50 :
-                        sentence.append("South")
-                    if  obs[place+1] > 0.20 and  obs[place+1] < 0.50 :
-                        sentence.append("East")
-                    if  obs[place+1] < -0.20 and  obs[place+1] > -0.50:
-                        sentence.append("West")
-            obj += 1
-
-        return sentence , push
-
-    def landmarks_sentence(self, obs, sce_conf, nb_agent):
-
-        sentence = []
-        obj = 0
-
-        # Position of the Landmarks
-        # For each Landmark 
-        for landmark in range(int(sce_conf['nb_objects'])):
-        #Calculate the place in the array
-            place = 4 # 4 values of the self agent
-            # 5 values for each agents (not self)
-            place = place + (int(sce_conf['nb_agents'])-1)*5
-            # 8 values for each objects 
-            place = place + int(sce_conf['nb_objects'])*8 
-            # 6 values for each landmark
-            place = place + landmark*6
-
-            # If visible
-            if  obs[place] == 1 :
-
-                #We update the area_obj
-                """
-                obs[0] pos x of the agent
-                obs[1] pos y of the agent
-                object type : 2
-                object color
-                nb of the agent
-                """
-                self.map.update_area_obj( obs[0], obs[1],3, self.land_colors[obj], nb_agent)
-                sentence.append(self.array_to_color(obs[place+3:place+6]))
-                sentence.append("Landmark")
-                
-                # North / South
-                if  obs[place+2] >= 0.2:
-                    sentence.append("North")
-                if  obs[place+2] < -0.2:
-                    sentence.append("South")
-                    
-                # West / East
-                if  obs[place+1] >= 0.2:
-                    sentence.append("East")
-                if  obs[place+1] < -0.2:
-                    sentence.append("West")
-                
-                #If we are close to landmark
-                elif ( obs[place+2] < 0.2 and  obs[place+2] >= -0.2 and
-                     obs[place+1] < 0.2 and  obs[place+1] >= -0.2):
-                    # North / South
-                    if  obs[place+2] >= 0:
-                        sentence.append("North")
-                    if  obs[place+2] < 0:
-                        sentence.append("South")
-                        
-                    # West / East
-                    if  obs[place+1] >= 0:
-                        sentence.append("East")
-                    if  obs[place+1] < 0:
-                        sentence.append("West")
-            obj += 1
-
-        return sentence
-
+    # Generate a sentence if the agent is "searching"
     def search_sentence(self, obs, nb_agent, push):
+        '''
+        Generate a sentence if the agent has been going in the same
+        direction for a while
+
+        Input:  
+            obs: list(float) The position of the agent 
+                             (2 values for position, 2 values for velocity)
+            nb_agent: (int) Number of the agent
+            push: (bool) We don't generate a search sentence if the agent is pushing
+
+        Output: list(str) The search sentence generated
+        '''
         sentence = []
-
-        direction = []
-
-        # Search
-        # Set the direction vector depending on the direction of the agent 
-        if  obs[3] > 0.5:
-            direction.append("North")
-        if  obs[3] < -0.5:
-            direction.append("South")
-        if  obs[2] > 0.5:
-            direction.append("East")
-        if  obs[2] < -0.5:
-            direction.append("West")
         
         # Check if it had the same direction for a long time
-        if self.update_direction(direction, nb_agent):
+        if self.update_direction(obs, nb_agent):
             # If not pushing generate the sentence
             # Depending on the speed of the agent
             if not push:
@@ -405,7 +255,214 @@ class ObservationParserStrat(ColorParser):
 
         return sentence
 
-    def parse_obs(self, obs, sce_conf, nb_agent):
+    # Generate a sentence if we see another agent
+    def agent_sentence(self, obs, agent_i):
+        '''
+        If the agent sees another agent, it will generate a sentence
+        with the position of this other agent (depending on the main agent)
+        and will generate another sentence if this agent is pushing and object
+
+        Input:  
+            obs: list(float) All the observation starting at this agent
+            agent_i: (int) Number of the agent
+
+        Output: list(str) The agent sentence generated
+        '''
+        sentence = []
+
+        # If visible                                      
+        if  obs[0] == 1 :
+            # Position
+            sentence.append("You")
+            collision = True
+
+            # North / South
+            if  obs[2] >= 0.15:
+                sentence.append("North")
+                collision = False
+            elif  obs[2] < -0.15:
+                sentence.append("South")
+                collision = False
+            
+            # West / East
+            if  obs[1] >= 0.15:
+                sentence.append("East")
+                collision = False
+            elif  obs[1] < -0.15:
+                sentence.append("West")
+                collision = False
+            # If collision with self
+            # Don't print anything about the position
+            if collision :
+                sentence.pop()
+
+
+            # Is it pushing an object
+            for object in range(int(self.nb_objects)):
+                # 5 values for each agents (not self)
+                spot = (int(self.nb_agents)-agent_i-1)*5 
+                # 8 values for each other objects
+                spot = spot + object*8 
+
+                # If visible                                      
+                if  obs[spot] == 1 :
+
+                    # Is it pushing ?
+                    # Calculate the distance of the center 
+                    # Of the object from the agent
+                    x =  obs[1] -  obs[spot+1]
+                    y =  obs[2] -  obs[spot+2]
+                    distance = x*x + y*y
+                    distance = sqrt(distance)
+                    
+                    # If collision
+                    if distance < 0.47:
+                        sentence.extend(["You","Push",self.array_to_color(obs[spot+5:spot+8]),"Object"])
+                        # Calculate where the object was pushed 
+                        # Based on its distance from the agent
+                        if y > 0.20 and y < 0.50 :
+                            sentence.append("South")
+                        elif y < -0.20 and y > -0.50 :
+                            sentence.append("North")
+                        if x > 0.20 and x < 0.50 :
+                            sentence.append("West")
+                        elif x < -0.20 and x > -0.50:
+                            sentence.append("East")
+                
+        return sentence
+
+    # Generate a sentence for the object
+    def object_sentence(self, pos_agent, obs, nb_agent):
+        '''
+        Will generate a sentence if the agent sees the object
+        with the position of this object and will generate another sentence
+        if this agent is pushing the object
+
+        Input:  
+            pos_agent: list(float) position x and y of the agent
+            obs: list(float) observation link to this object (1: visible or not, 2: position, 2: velocity)
+            nb_agent: (int) Number of the agent
+
+        Output: sentence: list(str) The object sentence generated
+                push: (bool) True if the agent is pushing an object
+        '''
+
+        sentence = []
+        # Check if the agent is pushing an object
+        push = False
+
+        # If visible                                      
+        if  obs[0] == 1 :
+
+            #We update the area_obj
+            self.map.update_area_obj(pos_agent[0], pos_agent[1],2,self.array_to_num(obs[5:8]),nb_agent)
+            sentence.append(self.array_to_color(obs[5:8]))
+            sentence.append("Object")
+            # North / South
+            if  obs[2] >= 0.25:
+                sentence.append("North")
+            elif  obs[2] < -0.25:
+                sentence.append("South")
+            
+            # West / East
+            if  obs[1] >= 0.25:
+                sentence.append("East")
+            elif  obs[1] < -0.25:
+                sentence.append("West")
+
+            # Calculate the distance of the center 
+            # Of the object from the agent
+            distance =  obs[1]* obs[1] + \
+                    obs[2]* obs[2]
+            distance = sqrt(distance)
+    
+
+            # If collision
+            if distance < 0.47:
+                sentence.extend(["I","Push",self.array_to_color(obs[5:8]),"Object"])
+                push = True
+                # Calculate where the object was pushed 
+                # Based on its distance from the agent
+                if  obs[2] > 0.20 and  obs[2] < 0.50 :
+                    sentence.append("North")
+                if  obs[2] < -0.20 and  obs[2] > -0.50 :
+                    sentence.append("South")
+                if  obs[1] > 0.20 and  obs[1] < 0.50 :
+                    sentence.append("East")
+                if  obs[1] < -0.20 and  obs[1] > -0.50:
+                    sentence.append("West")
+
+        return sentence, push
+
+    # Generate a sentence for the landmark
+    def landmark_sentence(self, pos_agent, obs, nb_agent):
+        '''
+        Will generate a sentence if the agent sees the landmark
+        with the position of this landmark
+
+        Input:  
+            pos_agent: list(float) position x and y of the agent
+            obs: list(float) observation link to this object (1: visible or not, 2: position)
+            nb_agent: (int) Number of the agent
+
+        Output: sentence: list(str) The landmark sentence generated
+        '''
+        sentence = []
+        # Variable to check if we are close to the landmark
+        # = True until we check its position
+        close = True
+
+        # If visible
+        if  obs[0] == 1 :
+
+            #We update the area_obj
+            self.map.update_area_obj(pos_agent[0], pos_agent[1],3,self.array_to_num(obs[3:6]), nb_agent)
+            sentence.append(self.array_to_color(obs[3:6]))
+            sentence.append("Landmark")
+            
+            # North / South
+            if  obs[2] >= 0.2:
+                sentence.append("North")
+                close = False
+            elif  obs[2] < -0.2:
+                sentence.append("South")
+                close = False
+
+            # West / East
+            if  obs[1] >= 0.2:
+                sentence.append("East")
+                close = False
+            elif  obs[1] < -0.2:
+                sentence.append("West")
+                close = False
+            
+            #If we are close to landmark
+            if close:
+                # North / South
+                if  obs[2] >= 0:
+                    sentence.append("North")
+                elif  obs[2] < 0:
+                    sentence.append("South")
+                    
+                # West / East
+                if  obs[1] >= 0:
+                    sentence.append("East")
+                elif  obs[1] < 0:
+                    sentence.append("West")
+
+        return sentence
+
+    # Generate the full sentence for the agent
+    def parse_obs(self, obs, nb_agent):
+        '''
+        Generate the full sentence for the agent
+
+        Input:  
+            obs: list(float) observation of the agent with all the entities
+            nb_agent: (int) Number of the agent
+
+        Output: sentence: list(str) The sentence generated
+        '''
         # Sentence generated
         sentence = []
         # Position of the agent
@@ -414,26 +471,69 @@ class ObservationParserStrat(ColorParser):
         push = False
 
         # Get the position of the agent
-        sentence.extend(self.position_agent(obs))
+        sentence.extend(self.position_agent(obs[0:2]))
         for i in range(1,len(sentence)):
             position.append(sentence[i])
-        
-        # Other agents sentence
-        sentence.extend(self.agents_sentence(obs, sce_conf))
+        pos_agent = obs[0:2]
 
+        # Will calculate the place in the array of each entity
+        # There are 4 values for the main agent
+        """
+        2: position
+        2: velocity
+        """
+        place = 4
+
+        # Add the values of the other agents
+        """
+        1: visible or not
+        2: position
+        2: velocity
+        """
+        for agent_i in range(self.nb_agents - 1):
+            # Other agents sentence
+            sentence.extend(self.agent_sentence(obs[place:],agent_i))
+            place = place + 5
+        
         # Objects sentence
-        obj_sent , push = self.objects_sentence(obs, sce_conf, nb_agent)
-        sentence.extend(obj_sent)
-        
-        # Landmark sentence
-        sentence.extend(self.landmarks_sentence(obs, sce_conf, nb_agent))
-        
-        # Search sentence
-        sentence.extend(self.search_sentence(obs, nb_agent, push))
+        """
+        1: visible or not
+        2: position
+        2: velocity
+        3: color
+        """
+        objects_sentence = []
+        for object in range(self.nb_objects):
+            obj_sent , push = self.object_sentence(pos_agent,obs[place:place+8],nb_agent)
+            objects_sentence.extend(obj_sent)
+            place = place + 8
+        sentence.extend(objects_sentence)
 
+        # Landmarks sentence
+        """
+        1: visible or not
+        2: position
+        3: color
+        """
+        landmarks_sentence = []
+        for landmark in range(self.nb_objects):
+            landmarks_sentence.extend(self.landmark_sentence(pos_agent,obs[place:place+6],nb_agent))
+            place = place + 6
+        sentence.extend(landmarks_sentence)
+
+        # Search sentence
+        # Send the main agent values
+        """
+        2:  position
+        2: velocity
+        """
+        sentence.extend(self.search_sentence(obs[0:4], nb_agent, push))
+        
         # Update the world variable to see what the agent
         # Has discovered (to generate not sentences)
-        self.map.update_world( obs[0], obs[1], nb_agent)
+        self.map.update_world(obs[0], obs[1], nb_agent)
+        # Check the aread and if an area if fully discovered
+        # It will call not_sentence()
         temp = self.map.update_area(nb_agent)
         if temp != None:
             not_sent = self.not_sentence(temp[0], temp[1], temp[2])
@@ -441,9 +541,13 @@ class ObservationParserStrat(ColorParser):
 
         return sentence
 
-    def reset(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
+    # Reset the informations on the agents
+    def reset(self, obj_colors, obj_shapes, land_colors, land_shapes):
+        '''
+        Reset the map of the agent and the colors of the exercise
+        '''
         # Reset the map and the colors
-        self.map.reset(sce_conf)
+        self.map.reset()
         self.land_colors = land_colors
         self.obj_colors = obj_colors
 
@@ -451,6 +555,14 @@ class ObservationParser(ColorParser):
     
     vocab = ['Located', 'Object', 'Landmark', 'North', 'South', 'East', 'West', 'Center', 'Not', "Red", "Blue", "Yellow", "Green", "Black", "Purple"]
     def __init__(self, args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
+        """
+        ObservationParser, generate sentences for the agents
+        :param sce_conf: (dict) information on the scenario
+        obj_colors: list(int) all the colors of the objects
+        obj_shapes: list(int) all the shapes of the objects
+        land_colors: list(int) all the colors of the landmarks
+        land_shapes: list(int) all the shapes of the landmarks
+        """
         self.args = args
         self.obj_colors = obj_colors
         self.land_colors = land_colors
@@ -461,10 +573,13 @@ class ObservationParser(ColorParser):
     def object_sentence(self, obs):
         '''
         Will generate a sentence if the agent sees the object
+        with the position of this object and will generate another sentence
+        if this agent is pushing the object
 
-        Input:  The observation from the agent of this object
+        Input:  
+            obs: list(float) observation link to this object (1: visible or not, 2: position, 2: velocity)
 
-        Output: A sentence based on what it sees
+        Output: sentence: list(str) The object sentence generated
         '''
         sentence = []
 
@@ -489,11 +604,13 @@ class ObservationParser(ColorParser):
      # Generate a sentence for the landmark
     def landmark_sentence(self, obs):
         '''
-        Will generate a sentence if the agent sees the object
+        Will generate a sentence if the agent sees the landmark
+        with the position of this landmark
 
-        Input:  The observation from the agent of this object
+        Input:  
+            obs: list(float) observation link to this object (1: visible or not, 2: position)
 
-        Output: A sentence based on what it sees
+        Output: sentence: list(str) The landmark sentence generated
         '''
         sentence = []
         # Variable to check if we are close to the landmark
@@ -526,13 +643,13 @@ class ObservationParser(ColorParser):
                 # North / South
                 if  obs[2] >= 0:
                     sentence.append("North")
-                if  obs[2] < 0:
+                elif  obs[2] < 0:
                     sentence.append("South")
                     
                 # West / East
                 if  obs[1] >= 0:
                     sentence.append("East")
-                if  obs[1] < 0:
+                elif  obs[1] < 0:
                     sentence.append("West")
 
         return sentence
@@ -544,12 +661,11 @@ class ObservationParser(ColorParser):
         or more types of object
 
         Input:  
-            position: The position of the agent
-            no_objects: list of not visible object
-            no_landmarks: list of not visible landmark
+            position: list(float) The position of the agent
+            no_objects: (bool) True or False if we see an object
+            no_landmarks: (bool) True or False if we see a landmark
 
-        Output: A sentence based on what it doesn't see
-                list(str)
+        Output: list(str) A sentence based on what it doesn't see
         '''
         sentence = []
 
@@ -595,7 +711,16 @@ class ObservationParser(ColorParser):
 
         return sentence
 
+    # Generate the full sentence for the agent
     def parse_obs(self, obs):
+        '''
+        Generate the full sentence for the agent
+
+        Input:  
+            obs: list(float) observation of the agent with all the entities
+
+        Output: sentence: list(str) The sentence generated
+        '''
         # Sentence generated
         sentence = []
         # Position of the agent
@@ -673,7 +798,11 @@ class ObservationParser(ColorParser):
 
         return sentence
 
-    def reset(self, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes):
+    # Reset the informations on the agents
+    def reset(self, obj_colors, obj_shapes, land_colors, land_shapes):
+        """
+        Reset the colors of the exercise
+        """
         # Reset the colors
         self.obj_colors = obj_colors
         self.land_colors = land_colors
@@ -690,63 +819,17 @@ class Color_Shape_Entity(Entity):
 
     # Get the color based on the number
     def num_to_color(self, color):
-        match color:
-            # Red
-            case 1:
-                color = [1, 0.22745, 0.18431]
-            # Blue
-            case 2:
-                color = [0, 0.38, 1]
-            # Green
-            case 3:
-                color = [0.2, 0.78 , 0.35]
+        # Red
+        if color == 1:
+            color = [1, 0.22745, 0.18431]
+        # Blue
+        elif color == 2:
+            color = [0, 0.38, 1]
+        # Green
+        elif color == 3:
+            color = [0.2, 0.78 , 0.35]
 
         return color
-
-    # Get the color based on the number
-    def color_to_num(self, color):
-        match color:
-            # Red
-            case [1, 0.22745, 0.18431]:
-                color = 1
-            # Blue
-            case [0, 0.38, 1]:
-                color = 2
-            # Green
-            case [0.2, 0.78 , 0.35]:
-                color = 3
-
-        return color
-
-    # Get the color based on the number
-    def num_to_shape(self, shape):
-        match shape:
-            # Circle
-            case 1:
-                shape = "circle"
-            # Square
-            case 2:
-                shape = "square"
-            # Triangle
-            case 3:
-                shape = "triangle"
-
-        return shape
-
-    # Get the color based on the number
-    def shape_to_num(self, shape):
-        match shape:
-            #Black
-            case "circle":
-                shape = 1
-            # Red
-            case "square":
-                shape = 2
-            # Blue
-            case "triangle":
-                shape = 3
-
-        return shape
 
 # properties of landmark entities
 class Landmark(Color_Shape_Entity):

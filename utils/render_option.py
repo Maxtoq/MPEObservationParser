@@ -12,6 +12,9 @@ class Render_option:
 
     # If a key is pressed, will toggle the value of the range     
     def modify_option(self):
+        """
+        Toggle the value of range
+        """
         # Show / Hide the range of the agents 
         # Agent 1
         if keyboard.is_pressed('1'):

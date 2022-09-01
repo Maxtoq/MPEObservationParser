@@ -12,10 +12,10 @@ def save(nb_agent, sentences, observations, actions):
     Also calling the save_analysis() that will check if the user wants to save the analysis
 
     Input:
-        nb_agents     :   number of agents in the environment
-        sentences     :   all the sentences generated during the training
-        observations  :   all observations generated during the training
-        actions       :   every actions taken by the agents
+        nb_agents     :   (int) number of agents in the environment
+        sentences     :   list(list(str)) all the sentences generated during the training
+        observations  :   list(list(float)) all observations generated during the training
+        actions       :   list(list(float)) every actions taken by the agents
 
     Output:
         Sentences_Generated.json

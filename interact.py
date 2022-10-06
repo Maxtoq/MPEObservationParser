@@ -4,8 +4,9 @@ import keyboard
 import json
 import json
 import time
+import numpy as np
 
-from utils.embedding.ngram import embedding
+# from utils.embedding.ngram import embedding
 from utils.make_env import make_env
 from utils.actors import KeyboardActor, RandomActor
 from utils.analyse import analyze
@@ -26,6 +27,7 @@ def run(args):
         args, 
         discrete_action=args.discrete_action, 
         sce_conf=sce_conf) 
+    nb_agents = env.num_agents
 
     # Load initial positions if given
     if args.sce_init_pos is not None:
@@ -35,9 +37,9 @@ def run(args):
         init_pos_scenar = None
 
     if args.actors == "manual" :
-        actor = KeyboardActor(sce_conf["nb_agents"])
+        actor = KeyboardActor(nb_agents)
     elif args.actors == "random" :
-        actor = RandomActor(sce_conf["nb_agents"])
+        actor = RandomActor(nb_agents)
     else:
         print("ERROR : Pick correct actors (random or manual)")
         exit(0)
@@ -50,7 +52,7 @@ def run(args):
 
     # Save all the sentences generated
     sentences = []
-    for nb_agent in range(sce_conf['nb_agents']):
+    for nb_agent in range(nb_agents):
         newAgent = []
         sentences.append(newAgent)
 
@@ -65,38 +67,44 @@ def run(args):
         # Reset the environment
         obs = env.reset(init_pos=init_pos_scenar)
 
-        # Get the colors and the shapes of the episode
-        obj_colors = []
-        obj_shapes = []
-        land_colors = []
-        land_shapes = []
-        if hasattr(env.world, 'objects'):
-           # Get the color and the shape
-            for object in env.world.objects :
-                obj_colors.append(object.num_color)
-                obj_shapes.append(object.num_shape)
-            for land in env.world.landmarks :
-                land_colors.append(land.num_color)
-                land_shapes.append(land.num_shape)
+        # # Get the colors and the shapes of the episode
+        # obj_colors = []
+        # obj_shapes = []
+        # land_colors = []
+        # land_shapes = []
+        # if hasattr(env.world, 'objects'):
+        #    # Get the color and the shape
+        #     for object in env.world.objects :
+        #         obj_colors.append(object.num_color)
+        #         obj_shapes.append(object.num_shape)
+        #     for land in env.world.landmarks :
+        #         land_colors.append(land.num_color)
+        #         land_shapes.append(land.num_shape)
 
-        parser.reset(obj_colors, obj_shapes, land_colors, land_shapes)
+        if parser is not None:
+            parser.reset(obj_colors, obj_shapes, land_colors, land_shapes)
         for step_i in range(args.episode_length):
             print("Step", step_i)
             print("Observations:", obs)
             # Get action
             actions = actor.get_action()
+            # actions = np.array([
+            #     [(-obs[0][0] - 0.04) * 10, 1],
+            #     [(-obs[1][0] + 0.04) * 10, 1]
+            # ])
             next_obs, rewards, dones, infos = env.step(actions)
             print("Rewards:", rewards)
-            # Get sentence of the agents
-            for agent in range(sce_conf["nb_agents"]):
-                print("Agent " + str(agent) + ":")
-                # Call the right parser
-                if args.parser == "basic":
-                    sentence = parser.parse_obs(obs[agent])
-                elif args.parser == 'strat':
-                    sentence = parser.parse_obs(obs[agent], agent)
-                print(sentence)
-                sentences[agent].append(sentence)
+            if parser is not None:
+                # Get sentence of the agents
+                for agent in range(nb_agents):
+                    print("Agent " + str(agent) + ":")
+                    # Call the right parser
+                    if args.parser == "basic":
+                        sentence = parser.parse_obs(obs[agent])
+                    elif args.parser == 'strat':
+                        sentence = parser.parse_obs(obs[agent], agent)
+                    print(sentence)
+                    sentences[agent].append(sentence)
 
             observations.append(obs)
             action_list.append(actions)
@@ -104,13 +112,14 @@ def run(args):
             # Get the render option
             range1, range2 = render_op.modify_option()
 
-            time.sleep(args.step_time)
             env.render(range1,range2)
+            time.sleep(args.step_time)
 
             if dones[0]:
                 break
             obs = next_obs
-       
+    
+    env.close()
     # Analysis of the sentences generated
     print("Would you like to see the analysis ?")
     print("Press A to see the analysis")
@@ -126,14 +135,14 @@ def run(args):
     print("Press S to save")
     print("Press any key to quit")
     if keyboard.read_key() == "s":
-        save(sce_conf['nb_agents'],sentences,observations,action_list)
+        save(nb_agents,sentences,observations,action_list)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Scenario
     parser.add_argument("--env_path", default="env/coop_push_scenario_sparse.py",
                         help="Path to the environment")
-    parser.add_argument("--sce_conf_path", default="configs/2a_3o_po_rel.json", 
+    parser.add_argument("--sce_conf_path", default=None, 
                         type=str, help="Path to the scenario config file")
     parser.add_argument("--sce_init_pos", default=None, 
                         type=str, help="Path to initial positions config file")
@@ -145,7 +154,7 @@ if __name__ == "__main__":
     parser.add_argument("--step_time", default=0.1, type=float)
     # Language
     parser.add_argument("--chance_not_sent", default=0.1, type=float)
-    parser.add_argument("--parser", default="basic", type=str, help="Available parsers are 'basic' and 'strat'")
+    parser.add_argument("--parser", default=None, type=str, help="Available parsers are 'basic' and 'strat'")
     # Action
     parser.add_argument("--actors", default="random", type=str, help="Available actors are 'random' or 'manual'")
 

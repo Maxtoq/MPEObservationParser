@@ -61,12 +61,12 @@ class RenderMultiAgent(MultiAgentEnv):
                         self.render_geoms.append(vision)
                     agent += 1
                 else:
-                    if entity.shape == "circle":
-                        geom = rendering.make_circle(entity.size)
-                    elif entity.shape == "square":
-                        geom = rendering.make_square(entity.size, entity.size)
-                    elif entity.shape == "triangle":
-                        geom = rendering.make_triangle(entity.size, entity.size)
+                    # if entity.shape == "circle":
+                    geom = rendering.make_circle(entity.size)
+                    # elif entity.shape == "square":
+                    #     geom = rendering.make_square(entity.size, entity.size)
+                    # elif entity.shape == "triangle":
+                    #     geom = rendering.make_triangle(entity.size, entity.size)
 
                     geom.set_color(*entity.color)
                 geom.add_attr(xform)

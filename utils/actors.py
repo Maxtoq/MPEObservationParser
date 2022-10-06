@@ -24,8 +24,6 @@ class KeyboardActor(Actor):
 
     def get_action(self):
         actions = np.zeros((self.n_agents, 2))
-        actions[0] = np.array([0.0, 0.0])
-        actions[1] = np.array([0.0, 0.0])
 
         if keyboard.is_pressed('z'):
             actions[0] += np.array([0.0, 0.5])

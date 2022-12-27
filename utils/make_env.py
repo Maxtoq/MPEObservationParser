@@ -21,7 +21,7 @@ def make_env(args, sce_conf={}, discrete_action=False):
         .n                  :   Returns the number of Agents
     '''
 
-    from utils.render_multiagent import RenderMultiAgent
+    from multiagent.environment import MultiAgentEnv
 
     # load scenario from script
     scenar_lib = imp.load_source('', scenario_path)
@@ -30,30 +30,32 @@ def make_env(args, sce_conf={}, discrete_action=False):
     # create world
     world = scenario.make_world(**sce_conf)
     # create multiagent environment
-    env = RenderMultiAgent(world, scenario.reset_world, scenario.reward,
+    env = MultiAgentEnv(world, scenario.reset_world, scenario.reward,
                         scenario.observation, 
                         done_callback=scenario.done if hasattr(scenario, "done")
                         else None, discrete_action=discrete_action)
 
-    # If world has an attribut objects
-    if args.parser is not None:
-        obj_colors = []
-        obj_shapes = []
-        land_colors = []
-        land_shapes = []
-        if hasattr(env.world, 'objects'):
-            # Get the color and the shape
-            for object in env.world.objects :
-                    obj_colors.append(object.num_color)
-                    obj_shapes.append(object.num_shape)
-            for land in env.world.landmarks :
-                    land_colors.append(land.num_color)
-                    land_shapes.append(land.num_shape)
+    # # If world has an attribut objects
+    # if args.parser is not None:
+    #     obj_colors = []
+    #     obj_shapes = []
+    #     land_colors = []
+    #     land_shapes = []
+    #     if hasattr(env.world, 'objects'):
+    #         # Get the color and the shape
+    #         for object in env.world.objects :
+    #                 obj_colors.append(object.num_color)
+    #                 obj_shapes.append(object.num_shape)
+    #         for land in env.world.landmarks :
+    #                 land_colors.append(land.num_color)
+    #                 land_shapes.append(land.num_shape)
 
     # Get parser
     parser = None
     if args.parser == "basic":
-        parser = scenar_lib.ObservationParser(args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes)
+        # parser = scenar_lib.ObservationParser(args, sce_conf, obj_colors, obj_shapes, land_colors, land_shapes)
+        parser = scenar_lib.ObservationParser(
+            sce_conf["nb_agents"], sce_conf["nb_objects"], args.chance_not_sent)
     elif args.parser == 'strat':
         parser = scenar_lib.ObservationParserStrat(sce_conf, obj_colors, obj_shapes, land_colors, land_shapes)
 

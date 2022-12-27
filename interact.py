@@ -1,7 +1,6 @@
 import argparse
-import random
 import keyboard
-import json
+import random
 import json
 import time
 import numpy as np
@@ -81,17 +80,14 @@ def run(args):
         #         land_colors.append(land.num_color)
         #         land_shapes.append(land.num_shape)
 
-        if parser is not None:
-            parser.reset(obj_colors, obj_shapes, land_colors, land_shapes)
-        for step_i in range(args.episode_length):
+        # if parser is not None:
+        #     parser.reset(obj_colors, obj_shapes, land_colors, land_shapes)
+        for step_i in range(args.ep_length):
             print("Step", step_i)
             print("Observations:", obs)
             # Get action
             actions = actor.get_action()
-            # actions = np.array([
-            #     [(-obs[0][0] - 0.04) * 10, 1],
-            #     [(-obs[1][0] + 0.04) * 10, 1]
-            # ])
+            print("Actions:", actions)
             next_obs, rewards, dones, infos = env.step(actions)
             print("Rewards:", rewards)
             if parser is not None:
@@ -109,10 +105,10 @@ def run(args):
             observations.append(obs)
             action_list.append(actions)
 
-            # Get the render option
-            range1, range2 = render_op.modify_option()
+            # # Get the render option
+            # range1, range2 = render_op.modify_option()
 
-            env.render(range1,range2)
+            env.render()
             time.sleep(args.step_time)
 
             if dones[0]:
@@ -148,7 +144,7 @@ if __name__ == "__main__":
                         type=str, help="Path to initial positions config file")
     # Environment
     parser.add_argument("--n_episodes", default=1, type=int)
-    parser.add_argument("--episode_length", default=100, type=int)
+    parser.add_argument("--ep_length", default=1000, type=int)
     parser.add_argument("--discrete_action", action='store_true')
     # Render
     parser.add_argument("--step_time", default=0.1, type=float)
@@ -156,7 +152,7 @@ if __name__ == "__main__":
     parser.add_argument("--chance_not_sent", default=0.1, type=float)
     parser.add_argument("--parser", default=None, type=str, help="Available parsers are 'basic' and 'strat'")
     # Action
-    parser.add_argument("--actors", default="random", type=str, help="Available actors are 'random' or 'manual'")
+    parser.add_argument("--actors", default="manual", type=str, help="Available actors are 'random' or 'manual'")
 
     args = parser.parse_args()
     run(args)

@@ -41,17 +41,10 @@ class Parser(ABC):
             sentence.append("West")
         
         # Center
-        elif len(sentence) == 1:
+        if len(sentence) == 1:
             sentence.append("Center")
 
         return sentence
-
-    @abstractmethod
-    def reset(self, obj_colors, obj_shapes, land_colors, land_shapes):
-        """
-        Returns a sentence generated based on the landmarks see or not by the agent
-        """
-        raise NotImplementedError
 
 class ColorParser(Parser):
     """ Abstract Parser """                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             

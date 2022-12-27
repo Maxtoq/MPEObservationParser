@@ -4,7 +4,9 @@ import random
 from multiagent.scenario import BaseScenario
 from multiagent.core import World, Agent, Landmark, Action, Entity
 
-BUTTON_RADIUS = 0.04
+from utils.parsers import Parser
+
+BUTTON_RADIUS = 0.03
 LANDMARK_RADIUS = 0.05
 OBJECT_RADIUS = 0.15
 OBJECT_MASS = 2.0
@@ -19,6 +21,233 @@ def get_dist(pos1, pos2, squared=False):
         return np.sqrt(dist)
 
 
+class ObservationParser(Parser):
+    
+    vocab = ['Located', 'Object', 'Landmark', 'North', 'South', 'East', 'West', 'Center', 'Not']
+
+    def __init__(self, nb_agents, nb_objects, chance_not_sent):
+        """
+        ObservationParser, generate sentences for the agents.
+        :param nb_agents: (int) Number of agents.
+        :param nb_objects: (int) Number of objects.
+        :param chance_not_sent: (float) Probability of generating a not 
+            sentence.
+        """
+        self.nb_agents = nb_agents
+        self.nb_objects = nb_objects
+        self.chance_not_sent = chance_not_sent
+
+    def object_sentence(self, obj_info):
+        """
+        Generates the part of the sentence concerning an object.
+        Input:  
+            obj_info: (numpy.ndarray(float)) Part of the observation linked to
+                the object (1: visible or not, 2: position, 2: velocity).
+        Output: phrase: (list(str)) The generated phrase.
+        """
+        phrase = []
+
+        # If visible                                      
+        if  obj_info[0] == 1.0:
+            phrase.append("Object")
+            # North / South
+            if  obj_info[2] > AGENT_RADIUS:
+                phrase.append("North")
+            elif  obj_info[2] < -AGENT_RADIUS:
+                phrase.append("South")
+            # West / East
+            if  obj_info[1] > AGENT_RADIUS:
+                phrase.append("East")
+            elif  obj_info[1] < -AGENT_RADIUS:
+                phrase.append("West")
+
+            moves = ["Moving"]
+            if obj_info[4] > 0.05:
+                moves.append("North")
+            elif obj_info[4] < -0.05:
+                moves.append("South")
+            if obj_info[3] > 0.05:
+                moves.append("East")
+            elif obj_info[3] < -0.05:
+                moves.append("West")
+            if len(moves) > 1:
+                phrase.extend(moves)
+
+        return phrase
+
+    def landmark_sentence(self, lm_info):
+        """
+        Generates the part of the sentence concerning a landmark.
+        Input:  
+            lm_info: (numpy.ndarray(float)) Part of the observation linked to
+                the landmark (1: visible or not, 2: position).
+        Output: phrase: (list(str)) The generated phrase.
+        """
+        phrase = []
+
+        # If visible                                      
+        if  lm_info[0] == 1.0:
+            phrase.append("Landmark")
+            # North / South
+            if  lm_info[2] > 0:
+                phrase.append("North")
+            else:
+                phrase.append("South")
+            # West / East
+            if  lm_info[1] > 0:
+                phrase.append("East")
+            else:
+                phrase.append("West")
+
+        return phrase
+
+    def button_sentence(self, button_info):
+        """
+        Generates the part of the sentence concerning a button.
+        Input:  
+            button_info: (numpy.ndarray(float)) Part of the observation linked to
+                the button (1: visible or not, 2: position).
+        Output: phrase: (list(str)) The generated phrase.
+        """
+        phrase = []
+
+        # If visible                                      
+        if  button_info[0] == 1.0:
+            phrase.append("Button")
+
+            if button_info[1] == 1.0:
+                phrase.append("Pushed")
+
+            # North / South
+            if  button_info[3] > 0:
+                phrase.append("North")
+            else:
+                phrase.append("South")
+            # West / East
+            if  button_info[2] > 0:
+                phrase.append("East")
+            else:
+                phrase.append("West")
+
+        return phrase
+
+    # Might generate a not sentence
+    def not_sentence(self, position, no_objects, no_landmarks):
+        '''
+        Might Create a "Not sentence" if the agent don't see 1 
+        or more types of object
+
+        Input:  
+            position: list(float) The position of the agent
+            no_objects: (bool) True or False if we see an object
+            no_landmarks: (bool) True or False if we see a landmark
+
+        Output: list(str) A sentence based on what it doesn't see
+        '''
+        sentence = []
+
+        #Generation of a NOT sentence ?
+        """
+        if = 1: Will generate not_sentence only for objects
+        if = 2: Will generate not_sentence only for landmarks
+        if = 3: Will generate not_sentence for both objects and landmarks
+        """
+        not_sentence = 0
+        # We don't always generate not sentence
+        if random.random() <= self.chance_not_sent:
+            not_sentence = random.randint(1,3)
+
+            if not_sentence == 1 and no_objects:
+                # Object not sentence
+                sentence.extend(["Object","Not"])
+                for word in position:
+                    sentence.append(word)
+            elif not_sentence == 2 and no_landmarks:
+                # Landmark not sentence
+                sentence.extend(["Landmark","Not"])
+                for word in position:
+                    sentence.append(word)
+            elif not_sentence == 3:
+                # Both object
+                if no_objects:
+                    sentence.extend(["Object","Not"])
+                    for word in position:
+                        sentence.append(word)
+                if no_landmarks:
+                    sentence.extend(["Landmark","Not"])
+                    for word in position:
+                        sentence.append(word)
+
+        return sentence
+    
+    # Generate the full sentence for the agent
+    def parse_obs(self, obs):
+        """
+        Generate a description of the given observation.
+        Input:
+            obs: numpy.ndarray(float) An agent's observation of the 
+                environment.
+        Output: sentence: list(str) The generated sentence.
+        """
+        # Sentence generated
+        sentence = []
+        # Position of the agent
+        position = []
+
+        # Get the position of the agent
+        sentence.extend(self.position_agent(obs[0:2]))
+        for i in range(1,len(sentence)):
+            position.append(sentence[i])
+
+        # There are 4 values per agent
+        """
+        2: position
+        2: velocity
+        """
+        place = 4 * self.nb_agents
+        
+        # Objects sentence
+        """
+        1: visible or not
+        2: position
+        2: velocity
+        """
+        obj_phrases = []
+        for object in range(self.nb_objects):
+            obj_phrases.extend(self.object_sentence(obs[place:place + 5]))
+            place += 5
+        no_objects = len(obj_phrases) == 0  
+        sentence.extend(obj_phrases)
+
+        # Landmarks sentence
+        """
+        1: visible or not
+        2: position
+        """
+        lm_phrases = []
+        for landmark in range(self.nb_objects):
+            lm_phrases.extend(self.landmark_sentence(obs[place:place + 3]))
+            place += 3
+        no_landmarks = len(lm_phrases) == 0
+        sentence.extend(lm_phrases)
+
+        # Buttons sentence
+        """
+        1: visible or not
+        1: pushed or not
+        2: position
+        """
+        button_phrase = self.button_sentence(obs[place:place + 4])
+        place += 4
+        no_buttons = len(button_phrase) == 0
+        sentence.extend(button_phrase)
+
+        # # Not sentence
+        # sentence.extend(self.not_sentence(position, no_objects, no_landmarks))
+
+        return sentence
+
+
 class Wall:
 
     def __init__(self, orientation, position):
@@ -31,7 +260,7 @@ class Wall:
             exit()
 
         if not -1 <= position <= 1:
-            print("ERROR: position parameter must be in [-1, 1] interval.")
+            print("ERROR: position parameter must be in [-1, 1]- interval.")
             exit()
         self.position = position
         # State
@@ -65,7 +294,7 @@ class Object(Entity):
         self.movable = True
 
 class ClickNPushWorld(World):
-    def __init__(self, nb_agents, nb_objects, nb_buttons):
+    def __init__(self, nb_agents, nb_objects):
         super(ClickNPushWorld, self).__init__()
         # add agent
         self.nb_agents = nb_agents
@@ -78,8 +307,7 @@ class ClickNPushWorld(World):
         # Distances between objects and their landmark
         self.obj_lm_dists = np.zeros(self.nb_objects)
         # Button
-        self.nb_buttons = nb_buttons
-        self.buttons = [Button() for _ in range(self.nb_buttons)]
+        self.button = Button()
         # Control inertia
         self.damping = 0.8
         # Add walls on each side and 
@@ -94,7 +322,7 @@ class ClickNPushWorld(World):
 
     @property
     def entities(self):
-        return self.agents + self.objects + self.landmarks + self.buttons
+        return self.agents + self.objects + self.landmarks + [self.button]
 
     def step(self):
         last_obj_lm_dists = np.copy(self.obj_lm_dists)
@@ -109,16 +337,13 @@ class ClickNPushWorld(World):
             # Compute reward
             self.global_reward += 100 * (
                 last_obj_lm_dists[obj_i] - self.obj_lm_dists[obj_i])
-        # Check if buttons are pushed to set movable state of objects
+        # Check if button is pushed to set movable state of objects
         objects_move = False
-        pushed = []
-        for b in self.buttons:
-            pushed.append(
-                any([b.is_pushing(ag.state.p_pos) for ag in self.agents]))
-            b.pushed = pushed[-1]
-        self.global_reward += 0.2 * sum(pushed)
-        if all(pushed):
-            objects_move = True
+        for ag in self.agents:
+            if self.button.is_pushing(ag.state.p_pos):
+                objects_move = True
+                self.global_reward += 0.5
+                break
         for obj in self.objects:
             obj.movable = objects_move
 
@@ -144,11 +369,10 @@ class ClickNPushWorld(World):
 
 class Scenario(BaseScenario):
 
-    def make_world(
-            self, nb_agents=2, nb_objects=1, nb_buttons=1, obs_range=2.83, 
-            collision_pen=1, reward_done=50, reward_button_pushed=10, 
-            step_penalty=0.1, obj_lm_dist_range=[0.5, 1.5]):
-        world = ClickNPushWorld(nb_agents, nb_objects, nb_buttons)
+    def make_world(self, nb_agents=2, nb_objects=1, obs_range=2.83, 
+                   collision_pen=1, reward_done=50, reward_button_pushed=10, 
+                   step_penalty=0.1, obj_lm_dist_range=[0.3, 1.5]):
+        world = ClickNPushWorld(nb_agents, nb_objects)
         # Init world entities
         self.nb_agents = nb_agents
         for i, agent in enumerate(world.agents):
@@ -156,7 +380,6 @@ class Scenario(BaseScenario):
             agent.silent = True
             agent.size = AGENT_RADIUS
             agent.initial_mass = AGENT_MASS
-            agent.accel = 3.8
             agent.color = np.array([0.0, 0.0, 0.0])
             agent.color[i % 3] = 1.0
         self.nb_objects = nb_objects
@@ -169,9 +392,8 @@ class Scenario(BaseScenario):
             world.landmarks[i].size = LANDMARK_RADIUS
             world.landmarks[i].collide = False
             world.landmarks[i].color = color
-        for i, but in enumerate(world.buttons):
-            but.size = BUTTON_RADIUS
-            but.color = np.array([0.01, 0.01, 0.01])
+        world.button.size = BUTTON_RADIUS
+        world.button.color = np.random.uniform(0, 1, world.dim_color)
         # Scenario attributes
         self.obs_range = obs_range
         self.obj_lm_dist_range = obj_lm_dist_range
@@ -219,21 +441,18 @@ class Scenario(BaseScenario):
             obj.movable = False
             # Positions
             if init_pos is None:
-                # obj.state.p_pos = np.array([0.0, 0.0])
-                # world.landmarks[i].state.p_pos = np.array([
-                #     random.uniform(-1 + OBJECT_RADIUS, 1 - OBJECT_RADIUS),
-                #     -0.8])
                 while True:
-                    obj.state.p_pos = np.array([
-                        random.uniform(-1 + OBJECT_RADIUS, 1 - OBJECT_RADIUS),
-                        random.uniform(-1 + OBJECT_RADIUS, 1 - OBJECT_RADIUS)])
+                    # obj.state.p_pos = np.array([
+                    #     random.uniform(-1 + obj.size, 1 - obj.size),
+                    #     random.uniform(-1 + obj.size, 1 - 2 * obj.size)])
+                    obj.state.p_pos = np.array([0.0, 0.0])
                     world.landmarks[i].state.p_pos = np.array([
-                        random.uniform(-1 + OBJECT_RADIUS, 1 - OBJECT_RADIUS),
-                        random.uniform(-1 + OBJECT_RADIUS, 1 - OBJECT_RADIUS)])
+                        random.uniform(-1 + obj.size, 1 - obj.size),
+                        random.uniform(-1 + obj.size, 1 - 2 * obj.size)])
                     dist = get_dist(
                         obj.state.p_pos, world.landmarks[i].state.p_pos)
                     if (self.obj_lm_dist_range is None  or 
-                        (dist > self.obj_lm_dist_range[0] and
+                        (dist > self.obj_lm_dist_range[0] and 
                          dist < self.obj_lm_dist_range[1])):
                         break
             else:
@@ -244,35 +463,18 @@ class Scenario(BaseScenario):
                     obj.state.p_pos, world.landmarks[i].state.p_pos)
             # Set distances between objects and their landmark
             world.obj_lm_dists[i] = dist
-        # Buttons' initial pos
-        for i, but in enumerate(world.buttons):
-            but.pushed = False
-            if init_pos is None:
-                # world.button.state.p_pos = np.array([
-                #     random.uniform(-1 + BUTTON_RADIUS, 1 - BUTTON_RADIUS),
-                #     1 - AGENT_RADIUS])
-                # world.button.state.p_pos = np.array([
-                #     0.0,
-                #     1 - AGENT_RADIUS])
-                while True:
-                    but.state.p_pos = np.array([
-                        random.uniform(-1 + AGENT_RADIUS, 1 - AGENT_RADIUS),
-                        random.uniform(-1 + AGENT_RADIUS, 1 - AGENT_RADIUS)])
-                    obj_dist = get_dist(
-                            world.objects[0].state.p_pos, 
-                            but.state.p_pos)
-                    lm_dist = get_dist(
-                            world.landmarks[0].state.p_pos, 
-                            but.state.p_pos)
-                    if (obj_dist > OBJECT_RADIUS + AGENT_RADIUS and 
-                        lm_dist > OBJECT_RADIUS + AGENT_RADIUS):
-                        break
-            else:
-                but.state.p_pos = np.array(init_pos["button"])
+        # Button's initial pos
+        if init_pos is None:
+            world.button.state.p_pos = np.array([
+                random.uniform(-1 + BUTTON_RADIUS, 1 - BUTTON_RADIUS),
+                1 - AGENT_RADIUS])
+        else:
+            world.button.state.p_pos = np.array(init_pos["button"])
         # Set initial velocity
         for entity in world.entities:
             entity.state.p_vel = np.zeros(world.dim_p)
-        # Initialise state of wall
+        # Initialise state of button and wall
+        world.button.pushed = False
         self._done_flag = False
 
     def reward(self, agent, world):
@@ -312,7 +514,8 @@ class Scenario(BaseScenario):
          - Button:
             - If in sight: [1, state, distance x, distance y]
             - If not: [0, 0, 0, 0]
-        => Full observation dim = 2 + 2 + 4 x (nb_agents - 1) + 5 x (nb_objects) + 4
+        => Full observation dim = 
+            2 + 2 + 4 x (nb_agents - 1) + 5 x nb_objects + 3 x nb_landmarks + 4
         All distances are divided by max_distance to be in [0, 1]
         """
         obs = [agent.state.p_pos, agent.state.p_vel]
@@ -340,14 +543,13 @@ class Scenario(BaseScenario):
                 )))
             else:
                 obs.append(np.array([0.0, 1.0, 1.0]))
-        for but in world.buttons:
-            if get_dist(
-                agent.state.p_pos, but.state.p_pos) <= self.obs_range:
-                obs.append(np.concatenate((
-                    [1.0, float(but.pushed)], 
-                    (but.state.p_pos - agent.state.p_pos) / self.obs_range, # Relative position normailised into [0, 1]
-                )))
-            else:
-                obs.append(np.array([0.0, 0.0, 1.0, 1.0]))
+        if get_dist(
+            agent.state.p_pos, world.button.state.p_pos) <= self.obs_range:
+            obs.append(np.concatenate((
+                [1.0, float(world.button.pushed)], 
+                (world.button.state.p_pos - agent.state.p_pos) / self.obs_range, # Relative position normailised into [0, 1]
+            )))
+        else:
+            obs.append(np.array([0.0, 0.0, 1.0, 1.0]))
 
         return np.concatenate(obs)
